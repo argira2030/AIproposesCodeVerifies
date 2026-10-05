@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIproposesCodeVerifies — Laboratorio</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#17202a;--muted:#667085;--line:#dfe3e8;--ok:#18794e;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+main{max-width:1100px;margin:auto;padding:28px 16px 60px}h1{margin:0 0 5px;font-size:28px}h2{font-size:19px;margin:0 0 14px}h3{font-size:15px;margin:16px 0 6px}.subtitle,.small,.hint{color:var(--muted)}.small,.hint{font-size:13px}
+.badge{display:inline-block;margin-top:10px;padding:5px 9px;border:1px solid var(--line);background:#fff;border-radius:999px;font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}.g2{grid-template-columns:1fr 1fr}label{display:block;font-weight:650;margin-bottom:6px}
+textarea,input[type=text],input[type=number],select{width:100%;border:1px solid #cbd2d9;border-radius:9px;padding:10px;background:#fff;color:var(--text);font:inherit}textarea{min-height:150px;resize:vertical}
+button{border:0;border-radius:9px;padding:10px 14px;font:inherit;font-weight:650;cursor:pointer;background:#17202a;color:#fff}button.secondary{background:#fff;color:var(--text);border:1px solid var(--line)}button.danger{background:#fff;color:var(--bad);border:1px solid #efc7c3}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px}.chips label{display:flex;gap:6px;align-items:center;margin:0;font-weight:500;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#fafbfc}
+.status{padding:13px;border-radius:10px;font-weight:750;margin-top:12px}.status.ok{background:#eaf7f0;color:var(--ok);border:1px solid #b7e0c9}.status.bad{background:#fff0ee;color:var(--bad);border:1px solid #efc7c3}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0}.metric{border:1px solid var(--line);border-radius:10px;padding:11px}.metric strong{display:block;font-size:21px}.metric span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}th{background:#f8fafc}
+.pill{display:inline-block;padding:3px 7px;border-radius:999px;font-size:12px;font-weight:700}.pill.ok{background:#eaf7f0;color:var(--ok)}.pill.bad{background:#fff0ee;color:var(--bad)}
+details{border:1px solid var(--line);border-radius:9px;padding:9px;margin:7px 0}summary{cursor:pointer;font-weight:650}
+.pill.warn{background:#fff7e0;color:#9a6700}.pill.info{background:#eef4ff;color:#2b5cb8}.item.warn{border-left:4px solid #9a6700}.item.info{border-left:4px solid #2b5cb8}.status.warn{background:#fff7e0;color:#9a6700;border:1px solid #f0dc9b}
+.item{padding:9px;border:1px solid var(--line);border-radius:8px;margin:6px 0}.item.bad{border-left:4px solid var(--bad)}.item.ok{border-left:4px solid var(--ok)}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#17202a;color:#fff;padding:10px 16px;border-radius:10px;max-width:92%;z-index:50;font-size:14px;box-shadow:0 4px 14px #0004}
+footer{margin-top:28px;color:var(--muted);font-size:12px}
+@media(max-width:760px){.grid,.g2{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,1fr)}}
+
+.skip{position:absolute;left:-999px;top:0;background:#17202a;color:#fff;padding:10px 14px;z-index:99;border-radius:0 0 8px 0}.skip:focus{left:0}
+:focus-visible{outline:3px solid #2b5cb8;outline-offset:2px}
+.jump{position:sticky;top:0;z-index:20;display:flex;gap:8px;overflow-x:auto;padding:8px 0;margin:10px 0 0;background:var(--bg);scrollbar-width:none}.jump::-webkit-scrollbar{display:none}
+.jump a,.jump button{flex:none;display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--text);text-decoration:none;font-size:14px;font-weight:650}
+.card.sec>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;cursor:pointer}
+summary::-webkit-details-marker{display:none}
+.card.sec>summary h2{margin:0}
+.card.sec>summary::after,.sub>summary::after{content:"";flex:none;width:10px;height:10px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+details[open]>summary::after{transform:rotate(-135deg)}
+.card.sec>.body{margin-top:14px}.sub{background:#fafbfc}.sub>summary{display:flex;justify-content:space-between;align-items:center;min-height:44px;font-size:15px}.sub>.body{margin-top:8px}
+.promptbox{border:2px solid #2b5cb8;border-radius:12px;padding:14px;background:#f4f8ff;margin-top:16px}.promptbox h3{margin-top:0;font-size:17px}
+.promptbox textarea{min-height:260px;font:14px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border:2px solid #9db8e8}
+.promptbox button:first-child{background:#2b5cb8}
+.status[tabindex]:focus{outline-offset:3px}
+@media(max-width:760px){
+main{padding:14px 12px 80px}h1{font-size:23px}h2{font-size:18px}
+input,select,textarea{font-size:16px}button{min-height:46px}
+.actions button{flex:1 1 150px}.chips label{min-height:44px;font-size:14px}
+.promptbox textarea{min-height:300px}.promptbox .actions button{flex:1 1 100%}
+.card{padding:14px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+.jump [hidden]{display:none}
+.sec.done>summary h2::after{content:" ✓";color:var(--ok)}
+.nextbar{justify-content:flex-end;margin-top:16px}
+.cards-only{display:none}.rec{border:1px solid var(--line);border-radius:10px;padding:11px;background:#fff}.rh{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:4px}
+@media(max-width:760px){.cards-only{display:grid;gap:8px;margin-bottom:12px}.tbl-wrap{display:none}.nextbar button{flex:1 1 100%}}
+.steps{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}.steps a{display:block;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text);text-decoration:none;min-height:44px}.steps b{display:block}.steps span{font-size:13px;color:var(--muted)}
+.lead{margin:0 0 12px}.note{margin:10px 0;padding:8px 12px;border-left:4px solid #b7791f;background:#fffaf0;font-size:13px}.mb{display:flex;gap:6px;flex-wrap:wrap}.mi div.mt{flex:1 1 180px}.mi em{font-style:normal;font-size:12px;font-weight:650;color:#2b5cb8}.mi{flex-wrap:wrap;display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:6px 0;background:#fff}.mi div{min-width:0}.mi b,.mi span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mi span{font-size:13px;color:var(--muted)}.mi button{flex:none}.path{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 14px}.path button{text-align:left;background:#fff;color:var(--text);border:1px solid var(--line);padding:12px 14px;min-height:44px;font-weight:500}.path button b{display:block}.path button span{font-size:13px;color:var(--muted)}.path button[aria-pressed=true]{border:2px solid #2b5cb8;background:#f4f8ff;padding:11px 13px}#readySum{white-space:pre-line}.ready{margin-top:18px;border-top:1px solid var(--line)}@media(max-width:760px){.path{grid-template-columns:1fr}}
+.path button{border-left:6px solid var(--c)}#pathEx{--c:#2b5cb8;--t:#f4f8ff}#pathNew{--c:#276749;--t:#f0fff4}#pathMine{--c:#975a16;--t:#fffaf0}
+.path button[aria-pressed=true]{border:2px solid var(--c);border-left-width:6px;background:var(--t);padding:11px 13px}.path button[aria-pressed=true] b::before{content:"✓ ";color:var(--c)}
+#doorBody{margin-top:14px;border:2px solid var(--c,#cbd2d9);border-radius:12px;padding:0 14px 14px;background:var(--t,#fff);scroll-margin-top:64px}#doorBody[data-mode=ex]{--c:#2b5cb8;--t:#f4f8ff}#doorBody[data-mode=new]{--c:#276749;--t:#f0fff4}#doorBody[data-mode=mine]{--c:#975a16;--t:#fffaf0}
+.dh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 -14px 12px;padding:10px 14px;background:var(--c);color:#fff;border-radius:9px 9px 0 0;font-weight:650}.dh button{background:#fff;color:#17202a;padding:6px 12px;font-size:13px}#exPick label{margin-top:12px}
+.quick{margin:8px 0}.quick div{padding:9px 12px;border-radius:8px;margin:4px 0;font-weight:650}.quick .c{background:#fdecea;color:#8a1c14}.quick .w{background:#fff4dc;color:#7a4b00}.quick .k{background:#e8f6ee;color:#14532d}
+.seg{display:flex;gap:8px;margin:8px 0}.seg button{flex:1;background:#fff;color:var(--text);border:1px solid var(--line)}.seg button[aria-pressed=true]{background:#17202a;color:#fff;border-color:#17202a}
+
+/* v25: interfaz progresiva */
+.jump[hidden]{display:none}
+.intro{margin:10px 0 0;max-width:62ch}
+.card.sec>summary .sum{margin-left:auto;font-size:13px;font-weight:500;color:var(--muted);text-align:right}
+.card.sec>summary .sum:empty,details[open]>summary .sum{display:none}
+#howto>summary h2{font-size:16px;font-weight:650;color:var(--muted)}
+footer details{margin-bottom:10px}
+.mi .mm{font-size:12px;color:#2b5cb8}.mi i{font-style:normal;color:var(--muted)}.mi .mt .tx{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#saveInstrBox{margin-top:12px}
+</style></head><body><a class="skip" href="#s1">Saltar al contenido</a><main>
+<header><h1>AIproposesCodeVerifies</h1>
+<p class="subtitle"><strong>La IA propone. El código verifica. Tú decides.</strong></p>
+<p class="intro">Pídele a una IA que transforme tu texto con tus reglas y comprueba aquí, en tu navegador, que no ha cambiado nada importante.</p></header>
+<nav class="jump" id="jumpNav" aria-label="Secciones" hidden><a href="#s1">Reglas</a><a href="#s2">Tu texto</a><a href="#s3">Respuesta IA</a><a href="#resultCard" id="navRes" hidden>Resultado</a><a href="#s5">Registro</a><button type="button" id="toggleAll" class="secondary" aria-expanded="false">Expandir todo</button></nav>
+
+<details class="card sec" id="howto"><summary><h2>Cómo se usa</h2></summary><div class="body"><ol class="steps">
+<li><a href="#s1"><b>Paso 1 · Reglas</b><span>Elige o crea las reglas que debe respetar la IA.</span></a></li>
+<li><a href="#s2"><b>Paso 2 · Tu texto</b><span>Pega tu texto original y copia el bloque (instrucciones + texto) para llevarlo a ChatGPT, Claude o Gemini.</span></a></li>
+<li><a href="#s3"><b>Paso 3 · Respuesta de la IA</b><span>Pega aquí lo que te devolvió la IA. El programa la verifica solo.</span></a></li>
+<li><a href="#resultCard"><b>Paso 4 · Resultado</b><span>Revisa los avisos. Acepta el resultado o genera una corrección y pide otra propuesta.</span></a></li></ol>
+<div class="actions"><button id="howtoEx" type="button">Ver un ejemplo</button></div></div></details>
+<section class="card" id="welcome" hidden><h2>Crea tu primer perfil</h2>
+<p>Empieza en el Paso 1 eligiendo cómo quieres definir tus reglas: <b>usar un ejemplo, crearlas con preguntas o escribir tus instrucciones</b>.</p>
+<p class="hint">Pulsa «Cargar ejemplo» para ver una prueba completa en 30 segundos.</p>
+<div class="actions"><button id="welcomeOk" class="secondary">Entendido</button><button id="welcomeEx" class="secondary">¿Quieres ver ejemplos de perfiles?</button></div></section>
+
+<details class="card sec" id="s1" open><summary><h2>Paso 1 · Reglas</h2><span class="sum" id="sum1"></span></summary><div class="body"><h3 style="margin-top:0">¿Cómo quieres empezar?</h3>
+<div class="path" id="doors" role="group" aria-label="Cómo quieres empezar">
+<button type="button" id="pathEx" aria-pressed="false"><b>Usar un ejemplo</b><span>Empieza con reglas ya preparadas, o con un perfil que guardaste.</span></button>
+<button type="button" id="pathNew" aria-pressed="false"><b>Definir mis reglas</b><span>El programa te guía paso a paso.</span></button>
+<button type="button" id="pathMine" aria-pressed="false"><b>Escribir mis instrucciones</b><span id="mineDoorTxt">Escribe, guarda y reutiliza tus mejores instrucciones.</span></button></div>
+<div id="doorBody" hidden><div class="dh"><span>Has elegido: <span id="doorName"></span></span><button type="button" id="doorChange">Cambiar</button></div>
+<p class="lead"><b>Tú defines las instrucciones y las reglas que quieres comprobar.</b> El programa puede verificar automáticamente algunas reglas concretas; el significado y el resultado final los revisas tú.</p>
+<div id="taskBox" hidden><h3>¿Qué le vas a pedir a la IA?</h3>
+<label for="transform">Tarea</label><select id="transform"><option>Reescribir</option><option>Simplificar</option><option>Resumir</option><option>Traducir</option><option>Convertir en instrucciones</option><option>Cambiar el tono</option></select><div id="policyDesc" class="hint"></div></div>
+<div id="exPick" hidden><label for="profile">Perfil</label><select id="profile"></select><div id="profileDesc" class="hint"></div><div id="profileNew" class="hint" hidden><span id="profileNewTxt"></span> <button type="button" id="profileNewBtn" class="secondary">Activarlos</button></div></div>
+<div id="minePanel" hidden>
+<h3>Lo que le pides a la IA</h3>
+<label for="myName">Título <span class="hint">(opcional)</span></label><input id="myName" type="text" placeholder="Ej.: Resumen de documentos sin perder datos">
+<label for="myText" style="margin-top:12px">Instrucciones para la IA</label><p class="hint" style="margin:0 0 6px">Escribe aquí las instrucciones que quieres utilizar. Si las guardas, se quedan en este navegador junto con la tarea y las reglas que se comprueban.</p><textarea id="myText" style="min-height:110px" placeholder="Ej.: Resume el texto sin modificar fechas, importes ni nombres propios. No inventes información. Mantén las URLs exactamente como están."></textarea>
+<p class="note"><b>Importante:</b> estas instrucciones se envían a la IA. El programa solo puede verificar automáticamente las reglas que sabe detectar.</p>
+<div class="actions"><button type="button" id="mySave" class="secondary">Guardar en mi biblioteca</button><button type="button" id="myNew" class="secondary">＋ Nuevas instrucciones</button></div>
+<h3>Mi biblioteca</h3><p class="hint" style="margin:0 0 6px">Guarda, reutiliza y comprueba tus mejores instrucciones. Todo queda en este navegador.</p><input id="libQ" type="text" placeholder="Buscar en mi biblioteca…" aria-label="Buscar en mi biblioteca" hidden style="margin-bottom:8px"><div id="myList"></div><div class="actions"><button type="button" id="libExp" class="secondary">Exportar biblioteca</button><button type="button" id="libImp" class="secondary">Importar</button><input id="libFile" type="file" accept=".json,application/json" hidden></div>
+<h3>Lo que el programa comprobará</h3><p id="mineChecks" class="small" aria-live="polite"></p>
+</div>
+<div class="actions"><button type="button" id="adjBtn" class="secondary" hidden>Ajustar estas reglas</button></div>
+<div id="wiz">
+
+<h3>1. ¿Qué quieres proteger?</h3><p class="hint">Lo que la IA no puede modificar.</p>
+<div id="protBox" class="chips"></div>
+<label for="names">Nombres o términos exactos (opcional, separados por coma; respeta mayúsculas)</label><input id="names" type="text" placeholder="Ej.: ARGIRA, cliente, expediente"><div id="scopeBox"></div>
+<h3>2. ¿Qué debe cumplir?</h3><p class="hint">Marca la regla y, si hace falta, escribe los términos.</p>
+<div id="styleBox" class="chips"></div>
+<div class="grid g2">
+<div><label for="forbidden">Términos prohibidos (separados por coma)</label><input id="forbidden" type="text"><div class="hint">También se detectan plural y femenino simples (ciudadano → ciudadanos, ciudadana).</div></div>
+<div><label for="required">Términos obligatorios (separados por coma)</label><input id="required" type="text"></div>
+</div>
+<details class="sub"><summary>Más reglas</summary><div class="body"><div class="grid g2">
+<div><label for="maxWords">Máximo de palabras por frase</label><input id="maxWords" type="number" min="3" max="80"></div>
+<div><label for="vague">Términos vagos (separados por coma)</label><input id="vague" type="text"></div></div>
+<div style="margin-top:14px"><label for="terms">Terminología (evitar=usar, separados por coma)</label><input id="terms" type="text"></div></div></details>
+<h3>3. ¿Qué puede cambiar libremente la IA?</h3>
+<div id="freeBox" class="chips"></div>
+<h3>4. ¿Qué revisarás tú?</h3><p class="hint">Lo que el código no puede comprobar. Una por línea.</p>
+<textarea id="review" style="min-height:70px" placeholder="Una por línea. Ej.: Español de España"></textarea>
+</div>
+<div class="ready" id="readyBox" hidden><h3>Tu perfil está listo</h3><p id="readySum" class="small" aria-live="polite"></p>
+<div class="actions"><button id="genBtn" class="secondary">Ver solo las instrucciones</button></div><p class="hint">Siguiente: pega tu texto en el Paso 2. Allí tendrás todo listo para copiar a la IA.</p></div>
+</div>
+<p id="genStale" class="note" role="status" hidden><b>Las reglas han cambiado.</b> Las instrucciones anteriores ya no corresponden a lo que ves aquí. Pulsa «Ver solo las instrucciones» otra vez antes de copiarlas.</p>
+<div id="genWrap" class="promptbox" hidden><h3 id="genOutH">Instrucciones para pegar en la IA</h3><p class="hint">Cópialas y pégalas en ChatGPT, Claude, Gemini… antes de pedir tu texto.</p><textarea id="genOut" readonly aria-labelledby="genOutH"></textarea><div class="actions"><button id="copyBtn">Copiar</button><button type="button" class="secondary" data-share="genOut">Compartir…</button><button type="button" class="secondary" data-sel="genOut">Seleccionar todo</button></div></div>
+<details class="sub" id="saveDet" hidden><summary>Guardar, exportar o importar perfil</summary><div class="body"><label for="pname">Nombre de las reglas (para guardarlas)</label><input id="pname" type="text" style="margin-bottom:12px"><div class="actions"><button id="saveProf" class="secondary">Guardar perfil</button><button id="delProf" class="danger">Eliminar perfil</button><button id="expMd" class="secondary">Exportar .aipcv.md</button><button id="impMd" class="secondary">Importar</button><input id="impFile" type="file" accept=".md,.txt" hidden></div></div></details>
+<div class="actions nextbar"><button type="button" data-next="s2">Siguiente: Paso 2 · tu texto →</button></div></div></details>
+<details class="card sec" id="s2"><summary><h2>Paso 2 · Tu texto</h2><span class="sum" id="sum2"></span></summary><div class="body"><textarea id="original" placeholder="Pega aquí solo el texto que quieres transformar."></textarea><div class="actions"><button type="button" id="origBtn" class="secondary">…o usa un archivo (.txt o .docx)</button><input id="origFile" type="file" accept=".txt,.docx,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden></div><p id="origEstado" class="hint" role="status" aria-live="polite" hidden></p><div class="promptbox" id="toAIWrap"><h3 id="toAIH">Para llevar a la IA</h3><p class="hint" id="toAIHint"></p><div class="seg" role="group" aria-label="Qué copiar"><button type="button" id="optBoth" aria-pressed="true">Instrucciones + texto</button><button type="button" id="optInstr" aria-pressed="false">Solo instrucciones</button></div><textarea id="toAI" readonly aria-labelledby="toAIH" placeholder="Aquí aparecerá lo que debes pegar en ChatGPT, Claude o Gemini: tus instrucciones y tu texto."></textarea><div class="actions"><button type="button" id="copyAI">Copiar instrucciones + texto</button><button type="button" class="secondary" data-sel="toAI">Seleccionar todo</button><button type="button" class="secondary" data-share="toAI">Compartir…</button></div><p class="hint">Después, pega en el Paso 3 lo que te devuelva la IA.</p></div><div class="actions nextbar"><button type="button" data-next="s3">Siguiente: Paso 3 · respuesta de la IA →</button></div></div></details>
+<details class="card sec" id="s3"><summary><h2>Paso 3 · Respuesta de la IA</h2><span class="sum" id="sum3"></span></summary><div class="body"><textarea id="proposal" placeholder="Cuando la IA te responda, pega aquí su respuesta (ChatGPT, Claude, Gemini…)"></textarea>
+<p id="autoHint" class="hint" aria-live="polite"></p>
+<p class="hint" id="s4">Al pegar la respuesta, el programa la verifica solo: compara tu texto con la respuesta de la IA y detecta cambios críticos y reglas incumplidas.</p>
+<div class="actions"><button id="exampleBtn" class="secondary">Cargar ejemplo (siguiente)</button><button id="clearBtn" class="secondary">Limpiar</button><button id="verifyBtn" class="secondary">↻ Volver a verificar</button></div></div></details>
+<details class="card sec" id="resultCard" open hidden><summary><h2>Paso 4 · Resultado</h2></summary><div class="body">
+<div id="status" class="status" role="status" tabindex="-1"></div>
+<div id="quick" class="quick" aria-live="polite"></div>
+<div class="summary"><div class="metric"><strong id="mOk">0</strong><span>reglas superadas</span></div><div class="metric"><strong id="mFail">0</strong><span>reglas no superadas</span></div><div class="metric"><strong id="mCrit">0</strong><span>cambios críticos</span></div><div class="metric"><strong id="mStyle">0</strong><span>avisos</span></div></div>
+<div id="details"></div>
+<div class="actions"><button id="fixBtn" class="secondary">Generar corrección para la IA</button><button id="againBtn" class="secondary">Verificar otra propuesta</button></div><p id="nextHint" class="hint" aria-live="polite"></p>
+<div id="fixWrap" class="promptbox" hidden><h3 id="fixOutH">Corrección para pegar en la IA</h3><p class="hint">Pégala en la misma conversación donde obtuviste la propuesta.</p><textarea id="fixOut" readonly aria-labelledby="fixOutH"></textarea><div class="actions"><button id="fixCopy">Copiar</button><button type="button" class="secondary" data-share="fixOut">Compartir…</button><button type="button" class="secondary" data-sel="fixOut">Seleccionar todo</button></div></div>
+<div class="grid g2" style="margin-top:14px"><div><label for="caseName">Nombre del caso (para el registro)</label><input id="caseName" type="text" placeholder="Ej.: Resumen del aviso de noviembre"></div></div>
+<div class="grid g2" style="margin-top:14px"><div><label for="aiUsed">IA utilizada (opcional)</label><input id="aiUsed" type="text" list="aiList" placeholder="ChatGPT, Claude, Gemini…"><datalist id="aiList"><option value="ChatGPT"><option value="Claude"><option value="Gemini"><option value="Copilot"><option value="Otra"></datalist></div>
+<div><label for="verdict">Tu valoración del resultado</label><select id="verdict"><option value="">Sin valorar</option><option value="util">El aviso era un problema real</option><option value="falso">Falso aviso (no era un problema)</option><option value="escapo">Se me escapó un problema que el código no vio</option></select></div></div>
+<div class="actions"><button id="saveBtn">Guardar resultado local</button><button id="saveInstrBtn" class="secondary" type="button">★ Guardar estas instrucciones</button><button id="exportOne" class="secondary">Exportar CSV</button></div><div id="saveInstrBox" class="promptbox" hidden><label for="instrTitle">Título (opcional)</label><input id="instrTitle" type="text" placeholder="Sin título"><p class="hint">Se guardan en tu biblioteca las instrucciones, la tarea y las reglas que se comprueban. Cuando guardes este resultado, quedará vinculado a ellas.</p><div class="actions"><button type="button" id="instrOk">Guardar en mi biblioteca</button><button type="button" id="instrCancel" class="secondary">Cancelar</button></div></div></div></details>
+<details class="card sec" id="s5"><summary><h2>Registro del experimento</h2></summary><div class="body">
+<p class="small">Se guarda solo en este navegador. El texto completo no se incluye en el CSV. “Superado” en estos casos no es una tasa real de detección: es el resultado de un experimento pequeño.</p>
+<div class="summary"><div class="metric"><strong id="count">0</strong><span>casos guardados</span></div><div class="metric"><strong id="passed">0</strong><span>superados</span></div><div class="metric"><strong id="failed">0</strong><span>no superados</span></div><div class="metric"><strong id="rate">—</strong><span>superados (de los casos guardados)</span></div></div>
+<div id="recCards" class="cards-only"></div><div class="tbl-wrap" style="overflow:auto"><table><thead><tr><th>Fecha</th><th>Caso</th><th>Perfil</th><th>Transformación</th><th>IA</th><th>Reglas</th><th>Resultado</th><th>Valoración</th></tr></thead><tbody id="records"></tbody></table></div>
+<h3>Reglas que más fallan</h3>
+<div style="overflow:auto"><table><thead><tr><th>Regla</th><th>Fallos</th><th>Casos</th><th>Problema real</th><th>Falso aviso</th></tr></thead><tbody id="ruleStats"></tbody></table></div>
+<p class="small">La valoración es por caso: si un caso tiene varias reglas falladas, se cuentan todas. Úsalo como pista, no como medida exacta.</p>
+<h3>Por transformación</h3>
+<div style="overflow:auto"><table><thead><tr><th>Transformación</th><th>Casos</th><th>Con cambio crítico</th><th>Con avisos</th></tr></thead><tbody id="transStats"></tbody></table></div>
+<div class="actions"><button id="exportAll" class="secondary">Exportar registro CSV</button><button id="deleteAll" class="danger">Borrar registro local</button></div></div></details>
+<footer><details class="sub" id="techDet"><summary>Detalles técnicos</summary><div class="body"><span class="badge">100 % local · sin API · sin servidor · sin IA integrada · motor v11</span></div></details>Prototipo experimental local. No sustituye revisión humana. Si pegas información sensible, este archivo es local, pero la propuesta de IA puede proceder de un servicio externo. DOI: <a href="https://doi.org/10.5281/zenodo.23142622" target="_blank" rel="noopener">10.5281/zenodo.23142622</a></footer>
+</main>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script src="extension/extractor.js"></script>
+<script>
+const STORE='iaproponecodigoverifica_lab_v3';
+const $=id=>document.getElementById(id);
+/* Almacenamiento con respaldo en memoria (algunos visores bloquean localStorage y las alertas) */
+const MEM={};let memUsed=false;
+const store={
+ get(k){if(k in MEM)return MEM[k];try{return localStorage.getItem(k)}catch{return null}},
+ set(k,v){try{localStorage.setItem(k,v);delete MEM[k];return true}catch{MEM[k]=v;memUsed=true;return false}},
+ del(k){delete MEM[k];try{localStorage.removeItem(k)}catch{}}
+};
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4500)}
+const memNote=()=>memUsed?' (Aviso: este visor bloquea el almacenamiento; se conserva solo mientras no cierres la página. Abre el archivo en Chrome/Safari para guardarlo de forma permanente.)':'';
+let askK='',askT;function ask(k,m){if(askK===k){askK='';return true}askK=k;toast(m+' Pulsa de nuevo para confirmar.');clearTimeout(askT);askT=setTimeout(()=>askK='',4500);return false}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const unique=a=>[...new Set(a)];
+const list=s=>String(s??'').split(',').map(x=>x.trim()).filter(Boolean);
+const tokens=s=>String(s??'').match(/[\p{L}\p{N}][\p{L}\p{N}_-]*/gu)||[];
+const ABBR=/(?<![\p{L}])(art|arts|apdo|sr|sra|sres|dr|dra|ud|uds|núm|pág|págs|ej|tel|avda)\.(?=\s)/giu;
+const sentences=s=>String(s??'').replace(/\r/g,'').replace(ABBR,'$1\u2024').split(/(?<=[.!?])\s+|\n+/).map(x=>x.trim().replace(/\u2024/g,'.')).filter(Boolean);
+const wordRe=w=>new RegExp('(?<![\\p{L}\\p{N}])'+norm(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\p{L}\\p{N}])','u');
+const has=(text,w)=>wordRe(String(w).replace(/\s+/g,' ')).test(norm(text).replace(/\s+/g,' '));
+
+const PROT={money:'Importes',date:'Fechas',time:'Horas',url:'URLs',email:'Correos',phone:'Teléfonos',identifier:'Códigos / identificadores',number:'Otros números',deadline:'Plazos',legal:'Referencias legales'};
+const STYLE={forbidden:'Términos prohibidos',required:'Términos obligatorios',length:'Longitud de frase',oneInstruction:'Una instrucción por frase',negation:'Negaciones',vague:'Términos vagos',terminology:'Terminología'};
+const LABEL={...PROT,...STYLE};
+const ALLP=Object.keys(PROT);
+const ENGINE='v12',FEM=new Set(['date','time','url','legal']);
+/* Alcance declarado del motor. Las pruebas comprueban que cada ejemplo se reconoce (o no) de verdad. */
+const SCOPE={
+ date:{name:'Fechas',ok:['15/10/2026','15-10-26','2026-10-15','15 de octubre de 2026','15 de octubre','October 15, 2026','15th of October 2026'],no:['2026/10/15','15 octubre 2026','15 Oct 2026','octubre de 2026','quince de octubre de 2026']},
+ money:{name:'Importes',ok:['29,90 €','€29,90','29.90 EUR','29,90 euros','1.250,00 €','$20'],no:['veintinueve euros','1,5 millones de euros','29,90 dólares']},
+ time:{name:'Horas',ok:['09:30','9:30 h','17 h','17h30','17.30 h','5:00 PM','17 horas'],no:['las nueve y media','las cinco de la tarde']}};
+const scopeHtml=()=>`<details class="sub"><summary>Más información sobre qué puede verificar el programa</summary><div class="body"><p class="small">Motor ${ENGINE}</p>`+Object.values(SCOPE).map(x=>`<p class="small"><b>${x.name}</b>. Reconoce: ${x.ok.map(esc).join(' · ')}. No reconoce (no se evalúa): ${x.no.map(esc).join(' · ')}.</p>`).join('')+`<p class="small">Lo que no figura como reconocido no se evalúa. Al traducir, los plazos no se evalúan. El programa no comprueba el significado del texto.</p></div></details>`;
+/* Prohibidos: una sola palabra; -o/-a/-os/-as entre sí, -e → +s, consonante → +es. Sin lematizador. */
+const forbVars=w=>{const n=norm(w).trim();if(!n||/\s/.test(n))return[n];const m=n.match(/^(.{2,})(os|as|o|a)$/);
+ if(m)return[m[1]+'o',m[1]+'a',m[1]+'os',m[1]+'as'];if(/e$/.test(n))return[n,n+'s'];if(/[^aeious]$/.test(n))return[n,n+'es'];return[n]};
+/* Huella de reglas: FNV-1a de 32 bits (identifica, no es criptográfica) */
+const fnv=t=>{let h=0x811c9dc5;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}return h.toString(16).padStart(8,'0')};
+const contract=()=>{const g=getState();return JSON.stringify({on:g.on.slice().sort(),s:g.s,free:g.free,review:g.review})};
+const PROFILES={
+ ayuntamiento:{name:'Ayuntamiento',desc:'Comunicación a ciudadanía: claridad y conservación estricta de datos.',
+  on:[...ALLP,'forbidden','required','length','oneInstruction','negation','vague','terminology'],
+  s:{maxWords:20,forbidden:'urgente, inmediatamente, garantizado, obligatorio',required:'ayuntamiento, ciudadanía',vague:'esto, ello, asunto, tema, próximamente, adecuadamente',terms:'ciudadano=ciudadanía, usuario=persona'}},
+ sanidad:{name:'Sanidad',desc:'Fechas, cantidades, horarios y términos clínicos intactos.',
+  on:[...ALLP,'forbidden','length','oneInstruction','negation','vague','terminology'],
+  s:{maxWords:20,forbidden:'garantizado, siempre, nunca, inmediatamente',required:'',vague:'esto, ello, cosa, asunto, próximamente, adecuadamente',terms:'paciente=persona, cita=consulta'}},
+ empresa:{name:'Empresa',desc:'Mensajes operativos: datos y códigos intactos, terminología estable.',
+  on:[...ALLP,'forbidden','length','oneInstruction','vague','terminology'],
+  s:{maxWords:25,forbidden:'urgente, garantizado, siempre, nunca',required:'',vague:'esto, ello, cosa, asunto, próximamente',terms:'clave=contraseña, app=aplicación'}},
+ base:{name:'Reglas básicas',desc:'Mínimo para probar IA propone → código verifica.',
+  on:[...ALLP,'forbidden','required','length','oneInstruction','terminology'],
+  s:{maxWords:20,forbidden:'',required:'',vague:'',terms:''}}
+};
+
+/* ---- Entidades protegidas: primero las tipadas, después los números sueltos ---- */
+const MONTHS='enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre';
+const MONTHS_EN='january|february|march|april|may|june|july|august|september|october|november|december';
+const NUMW={un:1,una:1,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,veintiun:21,veintiuno:21,veintiuna:21,veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29,treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90};
+const WORDNUM='(?:un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|diecis[eé]is|diecisiete|dieciocho|diecinueve|veinte|veinti(?:[uú]n|uno|una|d[oó]s|tr[eé]s|cuatro|cinco|s[eé]is|siete|ocho|nueve)|(?:treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa)(?:\\s+y\\s+(?:un|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve))?)';
+const ORD='primer[oa]|segund[oa]|tercer[oa]|cuart[oa]|quint[oa]|sext[oa]|s[eé]ptim[oa]|octav[oa]|noven[oa]|d[eé]cim[oa]|[uú]nic[oa]';
+const patterns={
+ url:/https?:\/\/[^\s<>"']+[^\s<>"'.,;:!?)]|(?<![\w\/.@-])www\.[^\s<>"']*[^\s<>"'.,;:!?)]/gi,
+ email:/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,
+ date:new RegExp('(?<!\\d)\\d{4}-\\d{2}-\\d{2}(?!\\d)|(?<!\\d)\\d{1,2}[\\/.-]\\d{1,2}[\\/.-]\\d{2,4}(?!\\d)|(?<!\\d)\\d{1,2}(?:\\.?[º°])?\\s+de\\s+(?:'+MONTHS+')(?:\\s+del?\\s+\\d{4})?|(?<!\\p{L})(?:'+MONTHS_EN+')\\s+\\d{1,2}(?:st|nd|rd|th)?,?\\s+\\d{4}|(?<!\\d)\\d{1,2}(?:st|nd|rd|th)?\\s+(?:of\\s+)?(?:'+MONTHS_EN+')(?:,?\\s+\\d{4})?','giu'),
+ time:/(?<!\d)\d{1,2}:\d{2}(?:\s?(?:h(?![\p{L}])|a\.m\.|p\.m\.|am(?![\p{L}])|pm(?![\p{L}])))?(?!\d)|(?<!\d)\d{1,2}\s?(?:a\.m\.|p\.m\.|am(?![\p{L}])|pm(?![\p{L}]))|(?<![\d:.])\d{1,2}\s?h\s?\d{2}(?!\d)|(?<![\d.,])\d{1,2}\.\d{2}\s?(?:h|horas?)(?![\p{L}\p{N}])|(?<![\d:.,])\d{1,2}\s?(?:h|horas?)(?![\p{L}\p{N}])/giu,
+ money:/(?<![\w.,])(?:(?:€|\$|£|USD\s?|EUR\s?)\s?(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{1,2})?(?!\d)|(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{1,2})?\s?(?:€|EUR\b|euros?\b|USD\b|dollars?\b|\$|£))/giu,
+ phone:/(?<![\w])(?:\+34[\s-]?)?[6789]\d{2}[\s-]?\d{3}[\s-]?\d{3}(?![\w])/g,
+ identifier:/\b[A-Z]{2,}[-_/][A-Z0-9][A-Z0-9_/-]*\b|\b[A-Z]{1,4}\d{4,}\b|\b\d{8}[A-Z]\b|\b\d{2}\.\d{3}\.\d{3}-?[A-Z]\b|\b[XYZ]-?\d{7}-?[A-Z]\b/g,
+ /* Plazos: número (cifra o palabra) + días/semanas/meses/años (+ hábiles/naturales…). Las horas siguen en «Horas». */
+ deadline:new RegExp('(?<![\\p{L}\\p{N}.,/])(?:\\d{1,3}|'+WORDNUM+')\\s+(?:d[ií]as?|semanas?|mes(?:es)?|a[ñn]os?)(?![\\p{L}\\p{N}])(?:\\s+(?:h[aá]bil(?:es)?|naturales?|laborables?|lectivos?)(?![\\p{L}\\p{N}]))?','giu'),
+ /* Referencias legales: se detecta que la cita cambie, no que la norma sea correcta */
+ legal:new RegExp('(?<![\\p{L}\\p{N}])(?:(?:Ley(?:\\s+Org[aá]nica)?|Real\\s+Decreto(?:[\\s-]+(?:ley|legislativo))?|Decreto(?:[\\s-]+ley)?|Resoluci[oó]n)\\s+\\d{1,4}/\\d{2,4}|(?:Reglamento|Directiva|Decisi[oó]n)\\s*(?:\\((?:UE|CE|CEE|Euratom)\\)\\s*)?\\d{1,4}/\\d{1,4}(?:/(?:UE|CE|CEE))?|Orden\\s+[A-Z]{2,5}/\\d{1,4}/\\d{4}|(?:art[íi]culos?|arts?\\.?)\\s*\\d{1,3}(?:\\.\\d{1,2})*(?:\\s*(?:bis|ter|qu[aá]ter))?|(?:apartados?|apdo\\.|p[aá]rrafo|disposici[oó]n\\s+(?:adicional|transitoria|final|derogatoria))\\s+(?:\\d{1,3}(?:\\.\\d{1,2})*|'+ORD+'))(?![\\p{L}\\p{N}])','giu')
+};
+const _ec=new Map();let NODL=false;
+function entities(text){
+ text=String(text??'');const ck=(NODL?'1':'0')+text;if(_ec.has(ck))return _ec.get(ck);
+ const all=[];
+ for(const t of Object.keys(patterns))if(!(NODL&&t==='deadline'))for(const m of text.matchAll(patterns[t]))all.push({type:t,value:m[0].trim(),start:m.index,end:m.index+m[0].length});
+ all.sort((a,b)=>a.start-b.start||(b.end-b.start)-(a.end-a.start));
+ const sel=[],cov=new Uint8Array(text.length+1);let maxEnd=-1;
+ for(const e of all)if(e.start>=maxEnd){sel.push(e);cov.fill(1,e.start,e.end);maxEnd=e.end}
+ for(const m of text.matchAll(/(?<![\w.,])(?:\d{1,3}(?: \d{3})+(?![\d.,])|\d+(?:[.,]\d+)?)\s?%?(?![\w])/g)){
+  if(cov.subarray(m.index,m.index+m[0].length).some(Boolean))continue;
+  const bef=text.slice(0,m.index),aft=text.slice(m.index+m[0].length);
+  /* numeración estructural: «1. », «2) », «(3)», «Paso 2», «paso 2 de 4», «en 3 pasos» */
+  if((/(?:^|\n)[ \t>*•-]*$/.test(bef)&&/^[.)]\s/.test(aft))||(/(?:^|\n)[ \t]*\($/.test(bef)&&/^\)/.test(aft))||/(?:paso|etapa|fase|step)\s*$/i.test(bef)||/(?:paso|etapa|fase)\s+\d+\s+de\s*$/i.test(bef)||/^\s*(?:pasos|etapas|fases)(?![\p{L}])/iu.test(aft))continue;
+  sel.push({type:'number',value:m[0].trim(),start:m.index,end:m.index+m[0].length});
+ }
+ sel.sort((a,b)=>a.start-b.start);
+ /* «9 a 14 horas» ≈ «9:00 a 14:00»: el número suelto antes de una hora en un rango es una hora */
+ sel.forEach((e,i)=>{if(e.type!=='number'||!/^\d{1,2}$/.test(e.value)||Number(e.value)>23)return;
+  const nx=sel[i+1];if(nx&&nx.type==='time'&&/^\s*(?:a|y|-|–|—|hasta)\s*$/i.test(text.slice(e.end,nx.start)))e.type='time'});
+ if(_ec.size>20)_ec.clear();_ec.set(ck,sel);return sel;
+}
+const MAP={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12,january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+const p2=n=>String(n).padStart(2,'0');
+/* Forma canónica: dos formatos distintos del mismo dato dan el mismo valor */
+function canon(t,v){
+ const s=norm(v).trim();let m;
+ if(t==='date'){
+  if(m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/))return`${m[1]}-${m[2]}-${m[3]}`;
+  if(m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/))return`${m[3].length<4?2000+Number(m[3]):m[3]}-${p2(m[2])}-${p2(m[1])}`;
+  const mo=Object.keys(MAP).find(k=>new RegExp('(?<![a-z])'+k+'(?![a-z])').test(s)),d=s.match(/\d{1,2}/),y=s.match(/\d{4}/);
+  return mo&&d?`${y?y[0]:'????'}-${p2(MAP[mo])}-${p2(d[0])}`:s;
+ }
+ if(t==='time'){m=s.match(/(\d{1,2})(?:\s?[:.h]\s?(\d{2}))?\s?(a\.?m\.?|p\.?m\.?)?/);if(!m)return s;
+  let h=Number(m[1]);if(m[3]&&m[3][0]==='p'&&h<12)h+=12;if(m[3]&&m[3][0]==='a'&&h===12)h=0;return`${p2(h)}:${m[2]||'00'}`}
+ if(t==='money'){const cur=/€|eur/.test(s)?'EUR':/\$|usd|dollar/.test(s)?'USD':/£/.test(s)?'GBP':'';
+  const n=(s.match(/\d[\d.,\s]*\d|\d/)||['0'])[0].replace(/\s/g,''),i=Math.max(n.lastIndexOf('.'),n.lastIndexOf(','));
+  let num=n;if(i>=0){const tail=n.slice(i+1);num=tail.length===3?n.replace(/[.,]/g,''):n.slice(0,i).replace(/[.,]/g,'')+'.'+tail}
+  return cur+Number(num).toFixed(2)}
+ if(t==='number')return s.replace(/\s+/g,'').replace(/^(\d{1,3}(?:[.,]\d{3})+)(%?)$/,(x,a,b)=>a.replace(/[.,]/g,'')+b).replace(/^(\d+),(\d{1,2})(%?)$/,'$1.$2$3');
+ if(t==='phone')return s.replace(/\D/g,'').replace(/^34(?=\d{9}$)/,'');
+ if(t==='deadline'){const m=s.match(/^(\d+|[a-z]+(?:\s+y\s+[a-z]+)?)\s+([dsma])[a-z]*(?:\s+([a-z]+))?$/);
+  if(!m)return s.replace(/\s+/g,'');
+  const n=/^\d/.test(m[1])?Number(m[1]):m[1].split(/\s+y\s+/).reduce((x,w)=>x+(NUMW[w]||0),0);
+  return`${n}|${m[2]}|${(m[3]||'').slice(0,5)}`}
+ if(t==='legal')return s.replace(/\barticulos?\b|\barts?\b\.?/g,'art').replace(/\bapdo\b\.?|\bapartados\b/g,'apartado').replace(/[-\s]+/g,'');
+ if(t==='url'){const u=s.replace(/\/+$/,'');return /^www\./.test(u)?'https://'+u:u}
+ if(t==='identifier'){const d=s.replace(/[\s.-]/g,'');if(/^(?:\d{8}|[xyz]\d{7})[a-z]$/.test(d))return d}
+ return s.replace(/\s+/g,'');
+}
+const rawk=v=>norm(v).replace(/\s+/g,'');
+const prevWord=(t,i)=>{const m=String(t).slice(Math.max(0,i-60),i).match(/([\p{L}\p{N}]+)[^\p{L}\p{N}]*$/u);return m?norm(m[1]):''};
+/* «dos» ≈ «2»: cifras escritas con palabras (sin «un/una/uno», que suelen ser artículos) */
+const WNRE=new RegExp('(?<![\\p{L}\\p{N}])'+WORDNUM+'(?![\\p{L}\\p{N}])','giu');
+function wordVals(t){const s=new Set();for(const m of String(t).matchAll(WNRE)){const parts=norm(m[0]).split(/\s+y\s+/);if(parts.length===1&&/^(?:un|una|uno)$/.test(parts[0]))continue;s.add(String(parts.reduce((x,w)=>x+(NUMW[w]||0),0)))}return s}
+function compare(o,p,type){
+ const a=entities(o).filter(e=>e.type===type),b=entities(p).filter(e=>e.type===type);
+ const ca=a.map(e=>canon(type,e.value)),cb=b.map(e=>canon(type,e.value));
+ if(type==='date')ca.forEach((c,i)=>{if(c.startsWith('????')){const k=cb.find(x=>!x.startsWith('????')&&x.slice(4)===c.slice(4)&&!ca.includes(x));if(k)ca[i]=k}});
+ const cnt=l=>{const m=new Map();for(const c of l)m.set(c,(m.get(c)||0)+1);return m},na=cnt(ca),nb=cnt(cb);
+ const first=l=>{const m=new Map();l.forEach((c,i)=>{if(!m.has(c))m.set(c,i)});return m},fa=first(ca),fb=first(cb);
+ const less=[...fa.keys()].filter(c=>nb.has(c)&&nb.get(c)<na.get(c)).map(c=>`${a[fa.get(c)].value} (aparece ${na.get(c)} veces; en la propuesta, ${nb.get(c)})`);
+ let miss=[...unique(a.filter((e,i)=>!nb.has(ca[i])).map(e=>e.value)),...less];
+ let add=unique(b.filter((e,i)=>!na.has(cb[i])).map(e=>e.value));
+ if(type==='number'){const wo=wordVals(o),wp=wordVals(p);miss=miss.filter(v=>!wp.has(canon('number',v)));add=add.filter(v=>!wo.has(canon('number',v)))}
+ const rawB=new Set(b.map(x=>rawk(x.value)));
+ const fmt=unique(a.filter((e,i)=>nb.has(ca[i])&&!rawB.has(rawk(e.value))).map(e=>`${e.value} → ${b[fb.get(ca[a.indexOf(e)])].value}`));
+ const swap=[],cand=[];ca.forEach((c,i)=>{if(na.get(c)===1&&nb.get(c)===1)cand.push(i)});
+ if(cand.length>=2&&cand.length<=300){const oc=new Map(cand.map(i=>[i,prevWord(o,a[i].start)])),pc=new Map(cand.map(i=>[i,prevWord(p,b[fb.get(ca[i])].start)]));
+  for(let x=0;x<cand.length;x++)for(let y=x+1;y<cand.length;y++){const i=cand[x],j=cand[y];
+   if(oc.get(i)===oc.get(j))continue;
+   if(pc.get(i)===oc.get(j)&&pc.get(j)===oc.get(i))swap.push(`${a[i].value} y ${a[j].value} han intercambiado su posición`)}}
+ return{miss,add,fmt,swap};
+}
+
+/* ---- UI de reglas ---- */
+LABEL.names='Nombres / términos exactos';
+const PSTORE='iaproponecodigoverifica_perfiles_v1';
+const userProfs=()=>{try{return JSON.parse(store.get(PSTORE)||'{}')}catch{return{}}};
+const saveProfs=o=>{store.set(PSTORE,JSON.stringify(o));return true};
+const CUSTOM=()=>({name:'Mi perfil',desc:'Define tus propias reglas: qué datos se protegen, qué normas se cumplen, qué libertades tiene la IA y qué revisará una persona. Ajusta y pulsa «Guardar perfil».',
+ on:['date','money','url'],s:{maxWords:25,forbidden:'',required:'',vague:'',terms:'',names:''},free:{omit:false,format:true},review:''});
+function getProf(id){if(id==='custom')return CUSTOM();if(id.startsWith('u:'))return userProfs()[id.slice(2)];return PROFILES[id]}
+function buildChips(){
+ const chip=(a,k,l)=>`<label><input type="checkbox" data-${a}="${k}"> ${l}</label>`;
+ $('protBox').innerHTML=Object.entries(PROT).map(([k,l])=>chip('rule',k,l)).join('')+chip('rule','names','Nombres / términos exactos');
+ $('styleBox').innerHTML=Object.entries(STYLE).map(([k,l])=>chip('rule',k,l)).join('');
+ $('freeBox').innerHTML=chip('free','omit','Puede eliminar información (aviso, no fallo)')+chip('free','format','Puede cambiar el formato de fechas, horas e importes');
+}
+const LEGACY_TYPES=['money','date','time','url','email','phone','identifier','number'];
+let pendingNew=[];
+function noteNew(p){const box=$('profileNew');pendingNew=[];box.hidden=true;
+ if(!p||!Array.isArray(p.on))return;
+ pendingNew=ALLP.filter(k=>!(p.types||LEGACY_TYPES).includes(k));
+ if(!pendingNew.length)return;
+ const n=pendingNew.length;
+ $('profileNewTxt').textContent='Este perfil se creó con una versión anterior. Hay '+n+(n===1?' tipo de dato nuevo':' tipos de datos nuevos')+' sin activar: '+pendingNew.map(k=>PROT[k]).join(', ')+'.';
+ box.hidden=false}
+$('profileNewBtn').onclick=()=>{document.querySelectorAll('[data-rule]').forEach(c=>{if(pendingNew.includes(c.dataset.rule))c.checked=true});pendingNew=[];$('profileNew').hidden=true;showPolicy()};
+function setState(p){
+ document.querySelectorAll('[data-rule]').forEach(c=>c.checked=p.on.includes(c.dataset.rule));
+ const fr=p.free||{omit:false,format:true};document.querySelectorAll('[data-free]').forEach(c=>c.checked=!!fr[c.dataset.free]);
+ $('pname').value=p.name;$('profileDesc').textContent=p.desc||'';
+ for(const k of ['maxWords','forbidden','required','vague','terms','names'])$(k).value=p.s?.[k]??'';
+ $('review').value=p.review||'';
+}
+function loadProfile(id){const p=getProf(id)||PROFILES.base;setState(p);noteNew(id.startsWith('u:')?p:null);if(PROFILES[id])$('profileDesc').textContent=p.desc+' Es un ejemplo: ajústalo y pulsa «Guardar perfil» para hacerlo tuyo.'}
+const active=()=>Object.fromEntries([...document.querySelectorAll('[data-rule]')].map(c=>[c.dataset.rule,c.checked]));
+const activeFree=()=>Object.fromEntries([...document.querySelectorAll('[data-free]')].map(c=>[c.dataset.free,c.checked]));
+const getState=()=>({name:$('pname').value.trim()||'Mi perfil',desc:'Perfil propio guardado en este navegador.',types:ALLP.slice(),on:Object.entries(active()).filter(([k,v])=>v).map(([k])=>k),
+ s:Object.fromEntries(['maxWords','forbidden','required','vague','terms','names'].map(k=>[k,$(k).value])),free:activeFree(),review:$('review').value});
+function renderProfiles(sel){
+ const u=Object.keys(userProfs());
+ $('profile').innerHTML='<option value="custom">Personalizado — define tus reglas</option>'+
+  (u.length?'<optgroup label="Mis perfiles">'+u.map(n=>`<option value="u:${esc(n)}">★ ${esc(n)}</option>`).join('')+'</optgroup>':'')+
+  '<optgroup label="Ejemplos para probar (no son tuyos)">'+Object.entries(PROFILES).map(([k,p])=>`<option value="${k}">Ejemplo: ${esc(p.name)}</option>`).join('')+'</optgroup>';
+ $('profile').value=sel||'custom';
+}
+const WKEY='iaproponecodigoverifica_bienvenida';
+const refreshWelcome=()=>{let seen=false;seen=!!store.get(WKEY);$('welcome').hidden=true};
+function genPrompt(){
+ const on=active(),F=activeFree(),T=$('transform').value,cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+ const sec=(t,a)=>a.length?`${t}\n`+a.map(x=>`- ${x}`).join('\n')+'\n\n':'';
+ const prot=ALLP.filter(k=>on[k]).map(k=>PROT[k]),nm=list($('names').value);
+ const inm=[...prot];if(on.names&&nm.length)inm.push(`Términos exactos, con esta grafía: ${nm.join(', ')}`);
+ const norms=[];
+ if(prot.length&&!F.format)norms.push('Escribir los datos inmutables exactamente igual que en el original.');
+ if(on.length)norms.push(`Máximo ${Number($('maxWords').value)||20} palabras por frase.`);
+ if(on.oneInstruction)norms.push('Una sola instrucción por frase.');
+ if(on.negation)norms.push('Evitar acumular negaciones.');
+ const fb=list($('forbidden').value);if(on.forbidden&&fb.length)norms.push(`No utilizar: ${fb.join(', ')}.`);
+ const rq=list($('required').value);if(on.required&&rq.length)norms.push(`Utilizar siempre: ${rq.join(', ')}.`);
+ const vg=list($('vague').value);if(on.vague&&vg.length)norms.push(`Evitar términos vagos como: ${vg.join(', ')}.`);
+ if(on.terminology)list($('terms').value).map(x=>x.split('=').map(y=>y.trim())).filter(x=>x.length===2&&x[0]&&norm(x[0])!==norm(x[1])).forEach(([a,b])=>norms.push(`Usar «${b}» en lugar de «${a}».`));
+ const lib=[F.omit?'Puede eliminar información secundaria.':T==='Resumir'?'Puede acortar el texto, conservando los datos inmutables.':'Puede reorganizar y reformular las frases.'];
+ if(prot.length&&F.format)lib.push('Puede cambiar el formato de fechas, horas e importes si el valor no cambia.');
+ const rev=$('review').value.split('\n').map(x=>x.trim()).filter(Boolean);
+ return 'CONTRATO DE TRANSFORMACIÓN\n\n'+sec('OBJETIVO',[`${cap(T.toLowerCase())} el texto que se adjunta.`])+sec('DATOS INMUTABLES',inm)+sec('NORMAS',norms)+sec('LIBERTADES',lib)+
+  sec('NO HACER',['Inventar información.','Cambiar o eliminar los datos inmutables.'].filter((x,i)=>i===0||inm.length))+sec('ESTILO (lo revisará una persona)',rev)+'Devuelve solo el texto resultante, sin comentarios.';
+}
+function genFix(){
+ if(!last)return'';
+ const fx=last.rules.filter(r=>r.fix).map(r=>`- ${r.fix}`);
+ return fx.length?'Tu versión no cumple estas condiciones, comprobadas automáticamente. Corrige únicamente lo siguiente y no modifiques ninguna otra parte del texto:\n\n'+fx.join('\n')+'\n\nDevuelve solo el texto corregido, sin comentarios.':'';
+}
+const reviewHtml=()=>{const L=$('review').value.split('\n').map(x=>x.trim()).filter(Boolean);return L.length?'<h3>Revisión humana (el código no puede comprobarlo)</h3>'+L.map(x=>`<label style="font-weight:500;display:flex;gap:8px"><input type="checkbox"> ${esc(x)}</label>`).join(''):''};
+
+const POL={
+ 'Reescribir':{miss:'crit',desc:'eliminar, cambiar o añadir datos es crítico.'},
+ 'Simplificar':{miss:'crit',desc:'igual que reescribir: simplificar no debe perder información.'},
+ 'Resumir':{miss:'warn',desc:'eliminar un dato es un aviso (un resumen puede omitir detalles); cambiar o inventar datos sigue siendo crítico.'},
+ 'Traducir':{miss:'crit',lang:true,desc:'los datos deben conservarse; cambiar su formato (15/10/2026 → October 15, 2026) no es un fallo. Las reglas basadas en palabras españolas no se aplican.'},
+ 'Convertir en instrucciones':{miss:'crit',desc:'datos y plazos deben seguir apareciendo.'},
+ 'Cambiar el tono':{miss:'crit',desc:'los datos deben quedar intactos; solo cambia la forma.'}
+};
+const pol=()=>POL[$('transform').value]||POL.Reescribir;
+const showPolicy=()=>{const F=activeFree();$('policyDesc').textContent='Con "'+$('transform').value+'": '+pol().desc+(F.omit?' Libertad del perfil: puede eliminar información (aviso).':'')+(F.format?'':' Libertad desactivada: el formato de fechas, horas e importes no puede cambiar.')};
+const rr=(id,level,detail,tag,fix)=>({id,name:LABEL[id],level,passed:level==='ok'||level==='info',detail,tag,fix:fix||''});
+let last=null;
+
+const fixTxt=s=>String(s??'').replace(/[\u00a0\u2007\u202f]/g,' ').normalize('NFC');
+function verify(){NODL=!!pol().lang;try{verify0()}finally{NODL=false}}
+function verify0(){
+ let cmp=0;
+ const o=fixTxt($('original').value.trim()),p=fixTxt($('proposal').value.trim());
+ if(!o||!p){toast('Introduce el texto original y la propuesta de IA.');return}
+ const on=active(),F=activeFree(),P=pol(),rules=[],changes=[],warns=[],fmts=[],polLvl=P.miss==='warn'?'warn':'crit',missLvl=(polLvl==='warn'||F.omit)?'warn':'crit';
+ for(const t of ALLP){if(!on[t])continue;
+  if(P.lang&&t==='deadline'){rules.push(rr(t,'info','No evaluado al traducir: los plazos se reconocen por palabras en español. Las cifras se comparan en «Otros números» si está activo.','No evaluado'));continue}
+  const {miss,add,fmt,swap}=compare(o,p,t),L=LABEL[t];
+  const nO=entities(o).filter(e=>e.type===t).length,fm=FEM.has(t);cmp+=nO;
+  let lv='ok',d=nO?`${nO} ${fm?'comparadas':'comparados'} · sin cambios`:`${fm?'Ninguna':'Ninguno'} en el original.`;
+  if(miss.length&&add.length){lv='crit';d=`Cambiado: ${miss.join(', ')} → ${add.join(', ')}`;changes.push(`${L}: ${miss.join(', ')} → ${add.join(', ')}`)}
+  else if(add.length){lv=t==='number'?'warn':'crit';d=`Añadido (no estaba en el original): ${add.join(', ')}`;(lv==='crit'?changes:warns).push(`${L}: añadido ${add.join(', ')}`)}
+  else if(miss.length){lv=t==='number'?'warn':missLvl;d=`Eliminado: ${miss.join(', ')}`;(lv==='crit'?changes:warns).push(`${L}: eliminado ${miss.join(', ')}`)}
+  if(swap.length){if(lv==='ok')d='';d+=(d?' · ':'')+'Cambio de orden: '+swap.join('; ');lv='crit';swap.forEach(s=>changes.push(`${L}: cambio de orden: ${s}`))}
+  if(fmt.length){d+=` · Mismo contenido, formato distinto: ${fmt.join(', ')}`;if(!F.format){if(lv!=='crit'){lv='crit';changes.push(`${L}: formato distinto (${fmt.join(', ')})`)}}else{fmts.push(...fmt.map(x=>`${L}: ${x}`));if(lv==='ok')lv='info'}}
+  let fx='';if(miss.length&&add.length)fx=`Conserva exactamente ${miss.join(', ')} (has escrito ${add.join(', ')}).`;else if(add.length)fx=`Elimina ${add.join(', ')}: no estaba en el original.`;else if(miss.length)fx=`Incluye de nuevo ${miss.join(', ')}.`;
+  if(!F.format&&fmt.length)fx=(fx?fx+' ':'')+`Mantén el formato original: ${fmt.map(x=>x.split(' → ')[0]).join(', ')}.`;
+  if(swap.length)fx=(fx?fx+' ':'')+`Corrige el orden: ${swap.join('; ')}.`;
+  rules.push(rr(t,lv,d,lv==='info'?'Formato distinto':'',lv==='warn'&&fx?'(Opcional) '+fx:fx));
+ }
+ const na=id=>rules.push(rr(id,'info','No aplicable: la propuesta está en otro idioma.','No aplicable'));
+ const sty=(id,bad,dBad,dOk,fix)=>rules.push(rr(id,bad?'style':'ok',bad?dBad:dOk,'',bad?fix:''));
+ const ss=sentences(p);
+ if(on.forbidden){if(P.lang)na('forbidden');else{const f=list($('forbidden').value).filter(x=>forbVars(x).some(v=>has(p,v)));sty('forbidden',f.length,`Encontrados: ${f.join(', ')}`,'No se han encontrado.',`No uses estas palabras: ${f.join(', ')}.`)}}
+ if(on.required){if(P.lang)na('required');else{const lost=list($('required').value).filter(x=>has(o,x)&&!has(p,x));
+  lost.forEach(x=>(polLvl==='crit'?changes:warns).push(`Término obligatorio eliminado: ${x}`));
+  rules.push(rr('required',lost.length?polLvl:'ok',lost.length?`Eliminados: ${lost.join(', ')}`:'Conservados.','',lost.length?`Vuelve a incluir: ${lost.join(', ')}.`:''))}}
+ if(on.names){const nm=list(fixTxt($('names').value)),bad=[],badN=[];
+  for(const n of nm){const re=new RegExp('(?<![\\p{L}\\p{N}])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\p{L}\\p{N}])','u');
+   if(!re.test(o))continue;if(!re.test(p)){bad.push(`${n} (no aparece con esa grafía exacta)`);badN.push(n)}}
+  bad.forEach(x=>changes.push(`Nombre/término exacto: ${x}`));
+  rules.push(rr('names',bad.length?'crit':'ok',bad.length?`No conservados: ${bad.join(', ')}`:nm.length?'Conservados exactamente.':'No has definido nombres exactos.','',badN.length?`Usa exactamente, con esa grafía: ${badN.join(', ')}.`:''))}
+ if(on.length){const max=Number($('maxWords').value)||20,bad=ss.map((s,i)=>[i+1,tokens(s).length]).filter(x=>x[1]>max);
+  sty('length',bad.length,bad.map(x=>`Frase ${x[0]}: ${x[1]} palabras (máx. ${max})`).join(' · '),`Todas las frases ≤ ${max} palabras.`,`Acorta o divide las frases ${bad.map(x=>x[0]).join(', ')} para que ninguna supere ${max} palabras.`)}
+ if(on.oneInstruction){if(P.lang)na('oneInstruction');else{const re=/\b(?:haz|haga|realiza|realice|pulsa|pulse|selecciona|seleccione|envía|envíe|descarga|descargue|comprueba|compruebe|introduce|introduzca|llama|llame|escribe|escriba|abre|abra|cierra|cierre|contacta|contacte|presenta|presente|adjunta|adjunte|renueva|renueve|consulta|consulte|visite|visita|acceda|accede)\b/gi;
+  const bad=ss.map((s,i)=>[i+1,(s.match(re)||[]).length]).filter(x=>x[1]>1);sty('oneInstruction',bad.length,bad.map(x=>`Frase ${x[0]}: ${x[1]} posibles instrucciones`).join(' · '),'No se detectaron varias instrucciones.',`Deja una sola instrucción en las frases ${bad.map(x=>x[0]).join(', ')}.`)}}
+ if(on.negation){if(P.lang)na('negation');else{const bad=ss.map((s,i)=>[i+1,(s.match(/\b(?:no|nunca|jamás|sin)\b/gi)||[]).length]).filter(x=>x[1]>=2);sty('negation',bad.length,bad.map(x=>`Frase ${x[0]}: varias negaciones`).join(' · '),'Sin acumulación de negaciones.',`Reformula las frases ${bad.map(x=>x[0]).join(', ')} con menos negaciones.`)}}
+ if(on.vague){if(P.lang)na('vague');else{const f=list($('vague').value).filter(x=>has(p,x));sty('vague',f.length,`Revisar: ${f.join(', ')}`,'No se han encontrado.',`Sustituye por algo concreto: ${f.join(', ')}.`)}}
+ if(on.terminology){if(P.lang)na('terminology');else{const f=list($('terms').value).map(x=>x.split('=').map(y=>y.trim())).filter(x=>x.length===2&&x[0]&&norm(x[0])!==norm(x[1])&&has(p,x[0])).map(([a,b])=>`${a} → ${b}`);sty('terminology',f.length,`Usos a revisar: ${f.join(', ')}`,'No se han encontrado.',`Aplica esta terminología: ${f.join(', ')}.`)}}
+ const passed=rules.filter(r=>r.passed).length;
+ last={ts:new Date().toISOString(),engine:ENGINE,hash:fnv(contract()),compared:cmp,caseName:$('caseName').value.trim()||'Sin nombre',profile:$('pname').value.trim()||'Personalizado',profileId:$('profile').value,transform:$('transform').value,
+  passed,failed:rules.length-passed,changes:unique(changes),warns:unique(warns),fmts:unique(fmts),avisos:rules.filter(r=>r.level==='warn'||r.level==='style').length,
+  overall:!rules.some(r=>r.level==='crit'),failedRules:rules.filter(r=>!r.passed).map(r=>r.name),ruleNames:rules.map(r=>r.name),rules,o,p};
+ render(last);
+}
+const PILL={ok:['ok','Superada'],info:['info',''],warn:['warn','Aviso'],style:['warn','Aviso de estilo'],crit:['bad','No superada']};
+function render(r){
+ const cls=!r.overall?'bad':r.avisos?'warn':'ok';
+ $('status').className='status '+cls;
+ const bn=!r.overall?'✗ Se detectaron cambios en los datos protegidos.':r.avisos?(r.compared?'⚠ Sin cambios críticos en los datos protegidos, pero hay avisos que revisar.':'⚠ No había datos protegidos que comparar, pero hay avisos que revisar.'):(r.compared?'Sin cambios detectados en los datos protegidos.':'No había datos protegidos que comparar.');
+ $('status').innerHTML=esc(bn)+'<div style="font-weight:500;font-size:13px;margin-top:4px">El programa no comprueba el significado del texto.</div>';
+ {const q=[...r.changes.map(x=>['c',x]),...(r.warns||[]).map(x=>['w',x])],qb=$('quick');qb.textContent='';const add=(k,t)=>{const d=document.createElement('div');d.className=k;d.textContent=t;qb.append(d)};q.slice(0,5).forEach(([k,t])=>add(k,(k==='c'?'✗ ':'⚠ ')+t.replace(': eliminado ',': falta ')));if(q.length>5)add('w','… y '+(q.length-5)+' más (ver detalles abajo)');if(!q.length&&r.compared)add('k','✓ Se conservan todos los datos protegidos.')}
+ $('mOk').textContent=r.passed;$('mFail').textContent=r.failed;$('mCrit').textContent=r.changes.length;$('mStyle').textContent=r.avisos;
+ const sec=(t,a,c)=>a.length?`<h3>${t}</h3>`+a.map(x=>`<div class="item ${c}">${esc(x)}</div>`).join(''):'';
+ const ruleHtml=x=>{const [c,l]=PILL[x.level];return`<details ${x.passed?'':'open'}><summary><span class="pill ${c}">${esc(x.tag||l)}</span> ${esc(x.name)}</summary><div class="item ${c==='bad'?'bad':c}">${esc(x.detail)}</div></details>`};
+ const badR=r.rules.filter(x=>!x.passed),goodR=r.rules.filter(x=>x.passed);
+ $('details').innerHTML=(r.changes.length?'<h3>Cambios críticos ('+r.changes.length+')</h3>'+r.changes.map(x=>`<div class="item bad">${esc(x)}</div>`).join(''):'')
+  +(badR.length?'<h3>Reglas no superadas ('+badR.length+')</h3>'+badR.map(ruleHtml).join(''):'')
+  +sec('Avisos: omisiones permitidas en esta transformación',r.warns,'warn')
+  +`<details class="sub"><summary>Reglas superadas (${goodR.length})</summary><div class="body">${goodR.map(ruleHtml).join('')}${r.changes.length?'':'<div class="item ok">No se han detectado cambios críticos.</div>'}</div></details>`
+  +sec('Cambios de formato (mismo contenido, no verificable como fallo)',r.fmts,'info')+reviewHtml()
+  +`<p class="small">Transformación: <b>${esc(r.transform)}</b> — ${esc(POL[r.transform]?.desc||'')}</p>`+scopeHtml()+`<details class="sub"><summary>Detalles técnicos</summary><div class="body"><p class="small">Motor ${ENGINE} · huella de reglas ${esc(r.hash)}</p></div></details>`;
+ $('fixWrap').hidden=true;$('verdict').value='';
+ $('resultCard').hidden=false;
+}
+
+/* ---- Registro ---- */
+const VL={util:'Problema real',falso:'Falso aviso',escapo:'Se escapó'};
+const syncMeta=()=>{if(last){const cn=$('caseName').value.trim();if(cn)last.caseName=cn;last.ai=$('aiUsed').value.trim();last.verdict=$('verdict').value}};
+const log=()=>{try{return JSON.parse(store.get(STORE)||'[]')}catch{return[]}};
+const drawCards=l=>{$('recCards').innerHTML=l.slice().reverse().map(x=>`<article class="rec"><div class="rh"><strong>${esc(x.caseName)}</strong><span class="pill ${x.overall?(x.avisos?'warn':'ok'):'bad'}">${x.overall?(x.avisos?'Con avisos':'Superada'):'No superada'}</span></div><div class="small">${esc(new Date(x.ts).toLocaleString('es-ES'))} · ${esc(x.profile)}${x.instrTitle?' · ★ '+esc(x.instrTitle):''} · ${esc(x.transform||'—')}</div><div class="small">IA: ${esc(x.ai||'—')} · Reglas: ${x.passed}/${x.passed+x.failed} · ${esc(VL[x.verdict]||'Sin valorar')}</div></article>`).join('')||'<p class="small">Todavía no hay resultados.</p>'};
+function draw(){
+ drawCards(log());const l=log(),ok=l.filter(x=>x.overall).length;
+ $('count').textContent=l.length;$('passed').textContent=ok;$('failed').textContent=l.length-ok;$('rate').textContent=l.length?`${ok}/${l.length}`:'—';
+ $('records').innerHTML=l.slice().reverse().map(x=>`<tr><td>${esc(new Date(x.ts).toLocaleString('es-ES'))}</td><td>${esc(x.caseName)}</td><td>${esc(x.profile)}${x.instrTitle?'<br><span class="small">★ '+esc(x.instrTitle)+'</span>':''}</td><td>${esc(x.transform||'—')}</td><td>${esc(x.ai||'—')}</td><td>${x.passed}/${x.passed+x.failed}</td><td><span class="pill ${x.overall?(x.avisos?'warn':'ok'):'bad'}">${x.overall?(x.avisos?'Con avisos':'Superada'):'No superada'}</span></td><td>${VL[x.verdict]||'—'}</td></tr>`).join('')||'<tr><td colspan="8">Todavía no hay resultados.</td></tr>';
+ const st={};l.forEach(x=>(x.ruleNames||[]).forEach(n=>{const v=st[n]=st[n]||{f:0,t:0,u:0,fa:0};v.t++;if((x.failedRules||[]).includes(n)){v.f++;if(x.verdict==='util')v.u++;if(x.verdict==='falso')v.fa++}}));
+ $('ruleStats').innerHTML=Object.entries(st).sort((a,b)=>b[1].f-a[1].f).map(([n,v])=>`<tr><td>${esc(n)}</td><td>${v.f}</td><td>${v.t}</td><td>${v.u}</td><td>${v.fa}</td></tr>`).join('')||'<tr><td colspan="5">Sin datos.</td></tr>';
+ const tr={};l.forEach(x=>{const v=tr[x.transform||'—']=tr[x.transform||'—']||{n:0,c:0,a:0};v.n++;if(!x.overall)v.c++;else if(x.avisos)v.a++});
+ $('transStats').innerHTML=Object.entries(tr).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v.n}</td><td>${v.c}</td><td>${v.a}</td></tr>`).join('')||'<tr><td colspan="4">Sin datos.</td></tr>';
+}
+function save(){
+ if(!last){toast('Primero verifica una propuesta.');return}
+ const l=log(),fp=norm(last.o)+'|'+norm(last.p)+'|'+last.profileId+'|'+last.transform+'|'+last.hash+'|'+last.engine;
+ syncMeta();const {o,p,rules,...rest}=last,k=l.findIndex(x=>x.fp===fp);
+ if(k>=0)l[k]={...rest,fp};else l.push({...rest,fp});
+ store.set(STORE,JSON.stringify(l));
+ draw();if(window.libRefresh)window.libRefresh();toast((k>=0?'Caso actualizado.':'Resultado guardado.')+memNote());
+}
+const csv=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+function dl(rows,name,type='text/csv;charset=utf-8'){
+ const b=new Blob(['\ufeff'+(Array.isArray(rows)?rows.map(r=>r.map(csv).join(';')).join('\r\n'):rows)],{type});
+ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+}
+const H=['fecha','caso','perfil','transformacion','resultado','reglas_superadas','reglas_no_superadas','cambios_criticos','avisos','reglas_falladas','ia','valoracion','motor','huella','instrucciones'];
+const row=x=>[x.ts,x.caseName,x.profile,x.transform,x.overall?(x.avisos??x.styleFails?'SUPERADA_CON_AVISOS':'SUPERADA'):'NO_SUPERADA',x.passed,x.failed,x.changes.length,x.avisos??x.styleFails,(x.failedRules||[]).join(' | '),x.ai||'',x.verdict||'',x.engine||'',x.hash||'',x.instrTitle||''];
+function exportOne(){if(!last){toast('Primero verifica una propuesta.');return}syncMeta();dl([H,row(last)],'aiproposescodeverifies-resultado.csv')}
+function exportAll(){const l=log();if(!l.length){toast('No hay resultados guardados.');return}dl([H,...l.map(row)],'aiproposescodeverifies-registro.csv')}
+
+/* ---- Perfil .aipcv.md ---- */
+function exportMd(){
+ const on=active(),F=activeFree(),sec=(t,a)=>`\n## ${t}\n`+(a.length?a.map(x=>`- ${x}`).join('\n'):'- (ninguno)')+'\n';
+ const md=`# Perfil: ${$('pname').value.trim()||'Mi perfil'}\n`+
+  sec('Transformación permitida',[$('transform').value.toLowerCase()])+
+  sec('Elementos inmutables',[...Object.keys(PROT),'names'].filter(k=>on[k]).map(k=>LABEL[k]))+
+  sec('Nombres exactos',list($('names').value))+
+  sec('Reglas',[...Object.keys(STYLE).filter(k=>on[k]).map(k=>STYLE[k]),`Máximo ${Number($('maxWords').value)||20} palabras por frase`])+
+  sec('Libertades de la IA',[F.omit&&'Puede eliminar información',F.format&&'Puede cambiar el formato de fechas, horas e importes'].filter(Boolean))+
+  sec('Términos prohibidos',list($('forbidden').value))+sec('Términos obligatorios',list($('required').value))+
+  sec('Términos vagos',list($('vague').value))+sec('Terminología',list($('terms').value).map(x=>x.replace('=',' -> ')))+
+  sec('Revisión humana',$('review').value.split('\n').map(x=>x.trim()).filter(Boolean));
+ dl(md,'perfil.aipcv.md','text/markdown;charset=utf-8');
+}
+function importMd(txt){
+ const secs={};let cur=null;
+ txt.replace(/^\uFEFF/,'').split(/\r?\n/).forEach(l=>{const h=l.match(/^##\s+(.+)/);if(h){cur=norm(h[1]);secs[cur]=[];return}
+  const i=l.match(/^[-*]\s+(.+)/);if(i&&cur&&!/^\(ninguno\)$/.test(i[1].trim()))secs[cur].push(i[1].trim())});
+ const byLabel=Object.fromEntries(Object.entries(LABEL).map(([k,v])=>[norm(v),k]));
+ const flags=[...(secs['elementos inmutables']||[]),...(secs['reglas']||[])];
+ const on=new Set(flags.map(x=>byLabel[norm(x)]).filter(Boolean));
+ const mw=flags.map(x=>x.match(/m[aá]ximo\s+(\d+)\s+palabras/i)).find(Boolean);
+ if(mw){$('maxWords').value=mw[1];on.add('length')}
+ if(!on.size&&!mw){toast('No se reconoció ninguna regla en el archivo.');return}
+ document.querySelectorAll('[data-rule]').forEach(c=>c.checked=on.has(c.dataset.rule));
+ const lib=secs['libertades de la ia'];const fr=lib?{omit:lib.some(x=>/eliminar/i.test(x)),format:lib.some(x=>/formato/i.test(x))}:{omit:false,format:true};
+ document.querySelectorAll('[data-free]').forEach(c=>c.checked=!!fr[c.dataset.free]);
+ const nm=txt.match(/^#\s*Perfil:\s*(.+)$/m);if(nm)$('pname').value=nm[1].trim();
+ $('names').value=(secs['nombres exactos']||[]).join(', ');
+ $('forbidden').value=(secs['terminos prohibidos']||[]).join(', ');$('required').value=(secs['terminos obligatorios']||[]).join(', ');
+ $('vague').value=(secs['terminos vagos']||[]).join(', ');$('terms').value=(secs['terminologia']||[]).map(x=>x.replace(/\s*(?:->|→)\s*/,'=')).join(', ');
+ $('review').value=(secs['revision humana']||[]).join('\n');
+ const trI=Object.keys(POL).find(k=>norm(k)===norm((secs['transformacion permitida']||[])[0]||''));if(trI)$('transform').value=trI;
+ $('profileNew').hidden=true;$('profileDesc').textContent='Perfil importado desde archivo (puedes ajustarlo antes de verificar).';showPolicy();
+}
+
+/* ---- Eventos ---- */
+buildChips();
+renderProfiles();
+const EX={
+ ayuntamiento:[
+  {t:'Reescribir',n:'Aviso municipal: cambia la fecha',
+   o:'Debe renovar su tarjeta ciudadana antes del 15/10/2026. El importe es de 29,90 €. Para renovar, visite https://ayuntamiento.example/renovar o llame al 612 345 678. Su número de expediente es EXP-2026-45871.',
+   p:'Debe renovar su tarjeta ciudadana antes del 15/11/2026. El importe es de 29,90 €. Para renovar, visite https://ayuntamiento.example/renovar o llame al 612 345 678. Su número de expediente es EXP-2026-45871.'},
+  {t:'Simplificar',n:'Aviso municipal: correcto',
+   o:'Debe renovar su tarjeta ciudadana antes del 15/10/2026. El importe es de 29,90 €. Para renovar, visite https://ayuntamiento.example/renovar o llame al 612 345 678. Su número de expediente es EXP-2026-45871.',
+   p:'Renueve su tarjeta ciudadana antes del 15/10/2026. Cuesta 29,90 €. Puede hacerlo en https://ayuntamiento.example/renovar. Si necesita ayuda, llame al 612 345 678. Expediente: EXP-2026-45871.'}],
+ sanidad:[
+  {t:'Reescribir',n:'Cita médica: cambia hora y adelanta ayuno',
+   o:'Su cita en el centro de salud es el 22/10/2026 a las 09:30. Acuda en ayunas, sin comer ni beber desde las 21:00. Para cambiarla, llame al 910 123 456 o escriba a citas@salud.example.',
+   p:'Su cita en el centro de salud es el 22/10/2026 a las 10:30. Acuda siempre en ayunas desde las 21:00. Para cambiarla, llame al 910 123 456 o escriba a citas@salud.example.'},
+  {t:'Simplificar',n:'Cita médica: correcto',
+   o:'Su cita en el centro de salud es el 22/10/2026 a las 09:30. Acuda en ayunas, sin comer ni beber desde las 21:00. Para cambiarla, llame al 910 123 456 o escriba a citas@salud.example.',
+   p:'Tiene consulta el 22/10/2026 a las 09:30. Venga en ayunas. No coma ni beba desde las 21:00. Para cambiarla, llame al 910 123 456 o escriba a citas@salud.example.'}],
+ empresa:[
+  {t:'Cambiar el tono',n:'Factura: cambia importe y código',
+   o:'Su factura FAC-2026-0187 es de 1.250,00 €. Vence el 30/11/2026. Pague en https://pagos.empresa.example o llame al 900 111 222.',
+   p:'Su factura FAC-2026-0178 es de 1.520,00 €. Vence el 30/11/2026. Pague en https://pagos.empresa.example o llame al 900 111 222.'},
+  {t:'Reescribir',n:'Factura: correcto',
+   o:'Su factura FAC-2026-0187 es de 1.250,00 €. Vence el 30/11/2026. Pague en https://pagos.empresa.example o llame al 900 111 222.',
+   p:'Tiene pendiente la factura FAC-2026-0187 por 1.250,00 €. Vence el 30/11/2026. Puede pagarla en https://pagos.empresa.example. Si tiene dudas, llame al 900 111 222.'}],
+ custom:[
+  {t:'Reescribir',n:'Personalizado: pierde nombres y usa palabra prohibida',
+   o:'ARGIRA revisará el expediente de cada cliente antes del 20/11/2026. El coste es de 480 €. Más información en https://argira.example/info.',
+   p:'Simplemente, el sistema revisará el expediente de cada usuario antes del 20/11/2026. El coste es de 480 €. Más información en https://argira.example/info.'},
+  {t:'Resumir',n:'Personalizado: resumen correcto',
+   o:'ARGIRA revisará el expediente de cada cliente antes del 20/11/2026. El coste es de 480 €. Más información en https://argira.example/info.',
+   p:'ARGIRA revisa el expediente de cada cliente antes del 20/11/2026 (480 €). Más información: https://argira.example/info.'},
+  {t:'Resumir',n:'Personalizado: resumen que omite el importe',
+   o:'ARGIRA revisará el expediente de cada cliente antes del 20/11/2026. El coste es de 480 €. Más información en https://argira.example/info.',
+   p:'ARGIRA revisará el expediente de cada cliente antes del 20/11/2026. Más información en https://argira.example/info.'}],
+ base:[
+  {t:'Resumir',n:'Resumen que omite datos (aviso)',
+   o:'La reunión es el 05/11/2026 a las 17:00 en la sala B-204. Confirme asistencia en https://reunion.example/ok antes del 03/11/2026.',
+   p:'La reunión es el 05/11/2026 en la sala B-204. Confirme asistencia en https://reunion.example/ok.'},
+  {t:'Resumir',n:'Resumen que cambia un dato (crítico)',
+   o:'La reunión es el 05/11/2026 a las 17:00 en la sala B-204. Confirme asistencia en https://reunion.example/ok antes del 03/11/2026.',
+   p:'La reunión es el 06/11/2026 en la sala B-204. Confirme en https://reunion.example/ok.'},
+  {t:'Traducir',n:'Traducción con otro formato (correcta)',
+   o:'La reunión es el 05/11/2026 a las 17:00 en la sala B-204. Confirme asistencia en https://reunion.example/ok antes del 03/11/2026.',
+   p:'The meeting is on November 5, 2026 at 5:00 PM in room B-204. Confirm attendance at https://reunion.example/ok before November 3, 2026.'},
+  {t:'Reescribir',n:'Reescritura correcta',
+   o:'La reunión es el 05/11/2026 a las 17:00 en la sala B-204. Confirme asistencia en https://reunion.example/ok antes del 03/11/2026.',
+   p:'Nos vemos el 05/11/2026 a las 17:00 en la sala B-204. Confirme antes del 03/11/2026 en https://reunion.example/ok.'}]
+};
+let exIdx={},exLoaded=false;
+const CFGX={rules:['names','forbidden','length'],names:'ARGIRA, cliente, expediente',forbidden:'simplemente',maxWords:25};
+EX.custom.forEach(e=>e.cfg=CFGX);
+function applyCfg(c){document.querySelectorAll('[data-rule]').forEach(b=>{if(c.rules.includes(b.dataset.rule))b.checked=true});$('names').value=c.names;$('forbidden').value=c.forbidden;$('maxWords').value=c.maxWords}
+function fillExample(next){
+ const id=$('profile').value,arr=EX[id]||(id==='custom'||id.startsWith('u:')?EX.custom:EX.base);
+ exIdx[id]=next?((exIdx[id]??-1)+1)%arr.length:0;
+ const e=arr[exIdx[id]];
+ $('caseName').value=e.n;$('transform').value=e.t;$('original').value=e.o;$('proposal').value=e.p;
+ if(e.cfg&&id==='custom')applyCfg(e.cfg);
+ $('resultCard').hidden=true;last=null;exLoaded=true;showPolicy();
+}
+$('profile').onchange=()=>{
+ loadProfile($('profile').value);last=null;$('resultCard').hidden=true;$('genWrap').hidden=true;showPolicy();
+ if(exLoaded||(!$('original').value.trim()&&!$('proposal').value.trim()))fillExample(false);
+};
+$('original').oninput=$('proposal').oninput=()=>{exLoaded=false;if(!$('original').value.trim())$('s2').classList.remove('done');if(!$('proposal').value.trim())$('s3').classList.remove('done')};
+/* --- Archivo como texto original (.txt/.docx). Usa extension/extractor.js (PEX), el mismo que la extensión; el resultado entra por #original como si se hubiera pegado. No tiene relación con «Importar» perfiles (.md). --- */
+(()=>{const nf=n=>n.toLocaleString('es-ES'),est=$('origEstado'),inp=$('origFile'),estado=m=>{est.textContent=m;est.hidden=!m};
+$('origBtn').onclick=()=>inp.click();
+$('original').addEventListener('input',()=>estado(''));
+inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;
+ if(typeof PEX==='undefined'){estado('No se pudo cargar el lector de archivos (extension/extractor.js). Puedes seguir pegando el texto a mano.');inp.value='';return}
+ estado(`Leyendo «${f.name}»…`);
+ try{
+  if(f.size>PEX.LIM.archivo)throw new PEX.ErrorExtraccion('demasiado-grande',`El archivo pesa ${(f.size/1048576).toFixed(1).replace('.',',')} MB y el máximo es ${nf(PEX.LIM.archivo/1048576)} MB.`);
+  const r=await PEX.extraer(f.name,await f.arrayBuffer());
+  $('original').value=r.texto;$('original').dispatchEvent(new Event('input',{bubbles:true}));$('original').scrollTop=0;
+  estado(`Archivo seleccionado: ${f.name}. Texto extraído: ✓ ${nf(r.caracteres)} caracteres.${r.aviso?' '+r.aviso:''} Revísalo arriba (puedes editarlo).`);
+ }catch(e){estado(`No se pudo usar «${f.name}»: ${e instanceof PEX.ErrorExtraccion?e.message:'no se pudo leer el archivo.'} Puedes seguir pegando el texto a mano.`)}
+ finally{inp.value=''}}})();
+$('howtoEx').onclick=()=>{if(($('original').value.trim()||$('proposal').value.trim())&&!exLoaded&&!ask('ex','Se reemplazarán tus textos por un ejemplo.'))return;$('welcome').hidden=true;$('profile').value='ayuntamiento';$('profile').onchange();fillExample(false);verify();afterVerify();$('resultCard').scrollIntoView({behavior:SM(),block:'start'})};
+$('exampleBtn').onclick=()=>fillExample(true);
+$('freeBox').onchange=showPolicy;
+$('welcomeOk').onclick=()=>{store.set(WKEY,'1');$('welcome').hidden=true};
+$('welcomeEx').onclick=()=>{$('welcome').hidden=true;$('profile').value='ayuntamiento';$('profile').onchange()};
+$('fixBtn').onclick=()=>{$('fixOut').value=genFix()||'No hay nada que corregir: no se detectó ningún incumplimiento verificable.';showBox('fixWrap','fixOut')};
+$('fixCopy').onclick=()=>copyText('fixOut');
+$('genBtn').onclick=()=>{$('genOut').value=genPrompt();showBox('genWrap','genOut')};
+$('copyBtn').onclick=()=>copyText('genOut');
+$('saveProf').onclick=()=>{const st=getState(),all=userProfs();all[st.name]=st;if(!saveProfs(all))return;renderProfiles('u:'+st.name);refreshWelcome();$('profileNew').hidden=true;$('profileDesc').textContent='Perfil «'+st.name+'» guardado.';toast('Perfil «'+st.name+'» guardado.'+memNote())};
+$('delProf').onclick=()=>{const v=$('profile').value;if(!v.startsWith('u:')){toast('Solo se pueden eliminar tus perfiles guardados (★).');return}
+ if(!ask('dp','¿Eliminar el perfil «'+v.slice(2)+'»?'))return;const all=userProfs();delete all[v.slice(2)];saveProfs(all);renderProfiles('custom');loadProfile('custom');showPolicy()};
+$('transform').onchange=()=>{showPolicy();last=null;$('resultCard').hidden=true};
+$('clearBtn').onclick=()=>{exLoaded=false;$('original').value='';$('proposal').value='';$('resultCard').hidden=true;last=null;$('caseName').value='';$('aiUsed').value='';$('verdict').value='';$('fixWrap').hidden=true;$('autoHint').textContent=''};
+$('verifyBtn').onclick=()=>{verify();afterVerify()};$('saveBtn').onclick=save;$('exportOne').onclick=exportOne;$('exportAll').onclick=exportAll;
+$('expMd').onclick=exportMd;$('impMd').onclick=()=>$('impFile').click();
+$('impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(importMd);e.target.value=''};
+$('deleteAll').onclick=()=>{if(ask('da','¿Eliminar todos los resultados guardados?')){store.del(STORE);draw();toast('Registro borrado.')}};
+loadProfile('custom');fillExample(false);showPolicy();draw();refreshWelcome();$('scopeBox').innerHTML=scopeHtml();
+
+/* --- v4: copiar/compartir, desplegables, accesibilidad --- */
+function copyText(id){const t=$(id);t.focus();t.select();try{t.setSelectionRange(0,t.value.length)}catch{}
+ const ok=()=>toast('Copiado ✓ Ya puedes pegarlo en tu IA'),ko=()=>{try{document.execCommand('copy')?ok():toast('Mantén pulsado el texto seleccionado y elige Copiar')}catch{toast('Mantén pulsado el texto seleccionado y elige Copiar')}};
+ try{navigator.clipboard.writeText(t.value).then(ok,ko)}catch{ko()}}
+function showBox(w,o){const b=$(w);b.hidden=false;b.scrollIntoView({behavior:SM(),block:'center'});const t=$(o);t.focus({preventScroll:true});t.select()}
+document.addEventListener('click',e=>{const s=e.target.closest('[data-sel]'),h=e.target.closest('[data-share]');
+ if(s){const t=$(s.dataset.sel);t.focus();t.select();try{t.setSelectionRange(0,t.value.length)}catch{}}
+ if(h){const t=$(h.dataset.share);navigator.share({title:'AIproposesCodeVerifies',text:t.value}).catch(()=>{})}});
+if(!navigator.share)document.querySelectorAll('[data-share]').forEach(b=>b.hidden=true);
+document.querySelectorAll('.jump a,.steps a').forEach(a=>a.addEventListener('click',()=>{const d=document.querySelector(a.getAttribute('href')),sec=d&&d.closest('details');if(sec)sec.open=true}));
+const secs=()=>document.querySelectorAll('details.sec,details.sub');
+$('toggleAll').onclick=()=>{const b=$('toggleAll'),open=b.getAttribute('aria-expanded')!=='true';secs().forEach(d=>{if(d.id!=='resultCard'||!d.hidden)d.open=open});b.setAttribute('aria-expanded',open);b.textContent=open?'Contraer todo':'Expandir todo'};
+document.querySelectorAll('[style*="overflow:auto"]').forEach(d=>{d.tabIndex=0;d.setAttribute('role','region');d.setAttribute('aria-label','Tabla desplazable')});
+if(matchMedia('(max-width:760px)').matches){$('s5').open=false;document.querySelectorAll('.sub').forEach(d=>d.open=false)}
+
+/* --- v5: flujo guiado --- */
+const SM=()=>matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth';
+const isMob=()=>matchMedia('(max-width:760px)').matches;
+function afterVerify(){const r=$('resultCard');if(r.hidden)return;openStep('resultCard',false);['s1','s2','s3'].forEach(k=>$(k).classList.add('done'));$('navRes').hidden=false;$('jumpNav').hidden=false;
+ const st=$('status'),bad=st.classList.contains('bad'),warn=st.classList.contains('warn');
+ $('fixBtn').classList.toggle('secondary',!bad);
+ $('nextHint').textContent=bad?'Siguiente paso: genera la corrección, compártela con tu IA, pega su nueva respuesta en el paso 3 y vuelve a verificar.':warn?'Revisa los avisos. Si te parecen bien, guarda el resultado en el registro (más abajo).':'Todo correcto. Guarda el resultado en el registro (más abajo) o prueba otra propuesta.';
+ r.scrollIntoView({behavior:SM(),block:'start'});st.focus({preventScroll:true})}
+document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{const from=b.closest('details.sec'),to=$(b.dataset.next);const ta=from.querySelector('textarea');if(!ta||ta.value.trim())from.classList.add('done');openStep(b.dataset.next)}));
+$('againBtn').onclick=()=>{openStep('s3');const t=$('proposal');t.focus({preventScroll:true});t.select()};
+{const sp=$('saveProf').onclick;$('saveProf').onclick=()=>{sp();$('s1').classList.add('done')}}
+
+/* --- v16: asistente del Paso 1 con tres caminos --- */
+(function(){const sel=$('profile'),wiz=$('wiz'),pick=$('exPick'),mp=$('minePanel'),sum=$('readySum'),B={ex:$('pathEx'),new:$('pathNew'),mine:$('pathMine')};let mode=null,mine=false,chosen=false;
+const KEY='iaproponecodigoverifica_instrucciones_v1',all=()=>{try{return JSON.parse(store.get(KEY)||'{}')}catch{return{}}};
+const go=()=>setTimeout(()=>$('doorBody').scrollIntoView({behavior:SM(),block:'start'}),60);
+const lab=c=>c.parentElement.textContent.trim();
+function ready(){const on=[...document.querySelectorAll('#protBox [data-rule]:checked,#styleBox [data-rule]:checked')].map(lab),fr=[...document.querySelectorAll('#freeBox [data-free]:checked')].map(lab),rv=$('review').value.split('\n').map(x=>x.trim()).filter(Boolean);
+ const t='Se comprobará: '+(on.length?on.join(', '):'nada todavía; marca qué proteger o cumplir')+'.\nLibertades de la IA: '+(fr.length?fr.join('; '):'ninguna')+'.\nTú revisarás: '+(rv.length?rv.join('; '):'nada anotado')+'.'+(mine&&$('myText').value.trim()?'\nTus instrucciones se añaden al texto que copiarás a la IA.':'');
+ if(sum.textContent!==t)sum.textContent=t;const mc='Se comprobará: '+(on.length?on.join(', '):'nada todavía')+'. Todo lo demás que escribas en tus instrucciones lo recibe la IA, pero el programa no lo verifica.';if($('mineChecks').textContent!==mc)$('mineChecks').textContent=mc}
+function sync(){if(mine&&sel.value!=='custom')mine=false;if(sel.value!=='custom')chosen=true;const m=mine?'mine':!chosen?'none':sel.value==='custom'?'new':'ex';
+ if(m!==mode){mode=m;for(const k in B)B[k].setAttribute('aria-pressed',k===m);const n=m==='none';$('doorBody').hidden=n;$('doorBody').dataset.mode=m;$('doorName').textContent=({ex:'Usar un ejemplo',new:'Definir mis reglas',mine:'Escribir mis instrucciones'})[m]||'';pick.hidden=m!=='ex';mp.hidden=m!=='mine';wiz.hidden=m!=='new';$('taskBox').hidden=n;$('readyBox').hidden=n;$('saveDet').hidden=n}
+ const a=$('adjBtn');a.hidden=!(mode!=='new'&&mode!=='none'&&wiz.hidden);a.textContent=mode==='mine'?'Elegir qué comprueba el programa':'Ajustar estas reglas';ready();stale();toAI()}
+let cur='',curFull=false;
+const nm=e=>e.title||'Sin título';
+const ent=(k,v)=>typeof v==='string'?{id:k,title:k,text:v}:{id:k,title:'',...v};
+const entries=()=>{const o=all();return Object.keys(o).map(k=>ent(k,o[k]))};
+const putAll=o=>store.set(KEY,JSON.stringify(o));
+const metaOf=e=>{const r=((e.cfg&&e.cfg.on)||[]).map(k=>LABEL[k]||k);return[e.transform,...r.slice(0,4),r.length>4?'+'+(r.length-4):''].filter(Boolean).join(' · ')};
+const newId=()=>'~'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+function snapshot(){const t=$('myText').value.trim(),full=!(mine&&t);return{text:full?gen():t,full:full||curFull&&mine,transform:$('transform').value,cfg:getState()}}
+function put(title,s){const c=all();title=title.trim();let id;
+ if(title)id=title;else if(cur&&c[cur]!==undefined&&!(typeof c[cur]==='string'))id=cur;else id=newId();
+ const old=c[id]!==undefined?ent(id,c[id]):null;
+ if(title&&cur&&cur.startsWith('~')&&cur!==id&&c[cur]&&!old){delete c[cur]}
+ c[id]={title,text:s.text,full:!!s.full,transform:s.transform,cfg:s.cfg,ts:old&&old.ts||Date.now(),upd:Date.now()};
+ const ok=putAll(c);cur=id;curFull=!!s.full;return ok}
+function stats(id){const l=log().filter(x=>x.instrId===id);return{n:l.length,ok:l.filter(x=>x.overall).length}}
+function list(){const all0=entries().reverse(),box=$('myList'),qi=$('libQ');box.textContent='';
+ qi.hidden=all0.length<6;const q=qi.hidden?'':qi.value.trim().toLowerCase();
+ const n=all0.filter(e=>!q||(e.title+' '+e.text+' '+metaOf(e)).toLowerCase().includes(q));
+ const dt=$('mineDoorTxt');if(dt)dt.textContent=all0.length?'Tu biblioteca: '+all0.length+(all0.length===1?' guardada':' guardadas')+'. Escribe, guarda y reutiliza.':'Escribe, guarda y reutiliza tus mejores instrucciones.';
+ if(!n.length){const p=document.createElement('p');p.className='hint';p.textContent=all0.length?'Ninguna coincide con la búsqueda.':'Aún no tienes instrucciones guardadas. Escribe las tuyas y pulsa «Guardar en mi biblioteca».';box.append(p);return}
+ const load=(e,focus)=>{cur=e.id;curFull=!!e.full;$('myName').value=e.title||'';$('myText').value=e.text;
+  if(e.cfg&&e.cfg.on){setState({...e.cfg,name:$('pname').value.trim()||'Mi perfil'});if(e.transform&&[...$('transform').options].some(o=>o.value===e.transform||o.text===e.transform))$('transform').value=e.transform;if(typeof showPolicy==='function')showPolicy();last=null;$('resultCard').hidden=true}
+  sync();list();if(focus)$('myText').focus();toast((focus?'Editando «':'En uso: «')+nm(e)+'».')};
+ const btn=(t,c,f)=>{const u=document.createElement('button');u.type='button';u.className=c;u.textContent=t;u.onclick=f;return u};
+ n.forEach(e=>{const r=document.createElement('div');r.className='mi';const d=document.createElement('div');d.className='mt';const b=document.createElement('b');b.textContent=nm(e);if(!e.title){b.style.fontStyle='italic';b.style.fontWeight='600'}d.append(b);
+  if(e.id===cur){const em=document.createElement('em');em.textContent='En uso';d.append(em)}
+  const m=metaOf(e);if(m){const s=document.createElement('span');s.className='mm';s.textContent=m;d.append(s)}
+  const s=stats(e.id);if(s.n){const u=document.createElement('span');u.className='mm';u.textContent='Probadas '+s.n+(s.n===1?' vez':' veces')+' · '+s.ok+' superadas';d.append(u)}
+  const sp=document.createElement('span');sp.className='tx';sp.textContent=e.text;d.append(sp);
+  const g=document.createElement('div');g.className='mb';
+  g.append(btn('Usar','secondary',()=>load(e,false)),btn('Editar','secondary',()=>load(e,true)),
+   btn('Duplicar','secondary',()=>{const c=all();let id=newId(),t='';if(e.title){t=e.title+' (copia)';let i=2;while(c[t])t=e.title+' (copia '+i++ +')';id=t}
+    c[id]={...e,id:undefined,title:t,ts:Date.now(),upd:Date.now()};delete c[id].id;putAll(c);cur=id;list();toast('Duplicada'+(t?' como «'+t+'»':'')+'.')}),
+   btn('Eliminar','danger',()=>{if(!ask('di:'+e.id,'¿Eliminar «'+nm(e)+'»?'))return;const c=all();delete c[e.id];putAll(c);if(cur===e.id)cur='';list();toast('Instrucciones «'+nm(e)+'» eliminadas.')}));
+  r.append(d,g);box.append(r)})}
+window.getInstr=()=>{if(!mine||!cur)return null;const c=all();return c[cur]===undefined?null:{id:cur,title:nm(ent(cur,c[cur]))}};
+$('libQ').oninput=list;window.libRefresh=list;
+B.new.onclick=()=>{mine=false;chosen=true;if(sel.value!=='custom'){sel.value='custom';sel.onchange()}sync();go()};
+B.ex.onclick=()=>{mine=false;chosen=true;if(sel.value==='custom'){const o=[...sel.options].find(x=>x.value!=='custom');if(o){sel.value=o.value;sel.onchange()}}sync();go()};
+B.mine.onclick=()=>{chosen=true;if(sel.value!=='custom'){sel.value='custom';sel.onchange()}mine=true;sync();go()};
+window.libSaveFromResult=t=>{const ok=put(t,snapshot());const e=ent(cur,all()[cur]);if(last){last.instrId=cur;last.instrTitle=nm(e)}$('myName').value=mine?(e.title||''):$('myName').value;list();$('saveInstrBox').hidden=true;toast('Guardadas en tu biblioteca: «'+nm(e)+'».'+(ok?'':memNote()))};
+$('libExp').onclick=()=>{const it=entries();if(!it.length){toast('Tu biblioteca está vacía.');return}dl(JSON.stringify({app:'IAProponeCodigoVerifica',tipo:'biblioteca',v:1,items:it.map(({id,...r})=>r)},null,1),'biblioteca-instrucciones.json','application/json;charset=utf-8')};
+$('libImp').onclick=()=>$('libFile').click();
+$('libFile').onchange=async()=>{const f=$('libFile').files[0];$('libFile').value='';if(!f)return;try{const j=JSON.parse(await f.text());if(j.tipo!=='biblioteca'||!Array.isArray(j.items))throw 0;const c=all();let n=0;j.items.forEach(x=>{if(!x||typeof x.text!=='string'||!x.text.trim())return;const t=String(x.title||'');if(Object.values(c).some(v=>ent('',v).text===x.text&&ent('',v).title===t))return;let id=t||newId();if(c[id]!==undefined){let i=2;id=t+' (importada)';while(c[id])id=t+' (importada '+i++ +')'}c[id]={...x,title:id.startsWith('~')?'':id,ts:x.ts||Date.now(),upd:Date.now()};n++});putAll(c);list();toast(n?'Importadas '+n+(n===1?' instrucción.':' instrucciones.'):'No había instrucciones nuevas que importar.')}catch{toast('El archivo no es una biblioteca válida.')}};
+$('myNew').onclick=()=>{cur='';curFull=false;$('myName').value='';$('myText').value='';list();$('myText').focus();ready()};
+$('doorChange').onclick=()=>$('doors').scrollIntoView({behavior:SM(),block:'center'});
+$('adjBtn').onclick=()=>{wiz.hidden=false;sync()};
+$('mySave').onclick=()=>{const t=$('myText').value.trim();if(!t){toast('Escribe primero las instrucciones que quieres guardar.');return}
+ const ok=put($('myName').value,{text:t,full:curFull,transform:$('transform').value,cfg:getState()});const e=ent(cur,all()[cur]);$('myName').value=e.title||'';list();toast('Guardadas en tu biblioteca: «'+nm(e)+'».'+(ok?'':memNote()))};
+function gen(){let t=genPrompt();const x=mine?$('myText').value.trim():'';if(x&&curFull)return x;const end='Devuelve solo el texto resultante, sin comentarios.';
+ if(x){t=t.endsWith(end)?t.slice(0,-end.length)+'INSTRUCCIONES DEL USUARIO\n'+x+'\n\n'+end:t+'\n\nINSTRUCCIONES DEL USUARIO\n'+x}
+ return t}
+$('genBtn').onclick=()=>{$('genStale').hidden=true;$('genOut').value=gen();showBox('genWrap','genOut')};
+function stale(){if($('genWrap').hidden)return;let t;try{t=gen()}catch{return}if(t!==$('genOut').value){$('genWrap').hidden=true;$('genStale').hidden=false}}
+let onlyInstr=false;
+function toAI(){const o=$('original').value.trim();let v='',h;
+ $('optBoth').setAttribute('aria-pressed',!onlyInstr);$('optInstr').setAttribute('aria-pressed',onlyInstr);$('copyAI').textContent=onlyInstr?'Copiar instrucciones':'Copiar instrucciones + texto';
+ if(mode==='none')h='Primero elige cómo definir tus reglas en el Paso 1.';
+ else if(onlyInstr){try{v=gen();h='✓ Solo instrucciones: cópialas y pégalas en tu IA; luego envía tu texto aparte.'}catch{h='No se pudieron generar las instrucciones.'}}
+ else if(!o)h='Pega tu texto arriba: aquí aparecerán tus instrucciones junto con tu texto, listas para copiar.';
+ else{try{v='Instrucciones:\n'+gen()+'\n\nTexto que debes procesar:\n'+o;h='✓ Listo: copia todo y pégalo en tu IA en un solo pegado.'}catch{h='No se pudieron generar las instrucciones.'}}
+ if($('toAI').value!==v)$('toAI').value=v;if($('toAIHint').textContent!==h)$('toAIHint').textContent=h}
+$('optBoth').onclick=()=>{onlyInstr=false;toAI()};$('optInstr').onclick=()=>{onlyInstr=true;toAI()};
+$('copyAI').onclick=()=>{if(!$('toAI').value){toast(mode==='none'?'Primero elige cómo definir tus reglas en el Paso 1.':'Pega primero tu texto original.');return}copyText('toAI')};
+list();sync();setInterval(sync,700)})();
+
+/* --- v21: verificar al pegar la respuesta --- */
+$('proposal').addEventListener('paste',()=>setTimeout(()=>{const h=$('autoHint');
+ if(!$('proposal').value.trim())return;
+ if(!$('original').value.trim()){h.textContent='Pega primero tu texto original en el Paso 2 para poder verificar.';return}
+ h.textContent='Respuesta recibida ✓ Verificando…';$('verifyBtn').click();
+ h.textContent='Respuesta recibida ✓ Verificada automáticamente. Puedes repetirla con «Volver a verificar».'},80));
+
+/* --- v25: interfaz progresiva ---
+   Visible para decidir. Desplegable para trabajar. Oculto hasta necesitarlo para lo técnico.
+   Al entrar en un paso se abre solo y se pliegan los demás pasos. */
+const STEPS=['s1','s2','s3','resultCard'];
+function openStep(id,scroll){const t=$(id);if(!t||t.hidden)return;
+ STEPS.forEach(k=>{const d=$(k);if(d)d.open=(k===id)});
+ $('howto').open=false;updSums();
+ if(scroll!==false)t.scrollIntoView({behavior:SM(),block:'start'})}
+document.querySelectorAll('.jump a,.steps a').forEach(a=>a.addEventListener('click',e=>{
+ const id=(a.getAttribute('href')||'').slice(1);if(!STEPS.includes(id)||$(id).hidden)return;
+ e.preventDefault();openStep(id)}));
+$('clearBtn').addEventListener('click',()=>{['s2','s3'].forEach(k=>$(k).classList.remove('done'));$('navRes').hidden=true;openStep('s2')});
+function setSum(id,t){const e=$(id);if(e&&e.textContent!==t)e.textContent=t}
+function updSums(){
+ const started=!$('doorBody').hidden;document.querySelector('#s1 .nextbar').hidden=!started;
+ const dn=$('doorName').textContent,ps=$('profile').selectedOptions[0];
+ setSum('sum1',$('doorBody').hidden?'':dn+(!$('exPick').hidden&&ps?' · '+ps.textContent.trim():''));
+ const w=$('original').value.trim().split(/\s+/).filter(Boolean).length;
+ setSum('sum2',!started?'':exLoaded&&w?'Texto de ejemplo':w?w+(w===1?' palabra':' palabras'):'');
+ setSum('sum3',!started?'':$('proposal').value.trim()?(exLoaded?'Respuesta de ejemplo':'Pegada'):'');
+ if(!$('doorBody').hidden)$('jumpNav').hidden=false}
+updSums();setInterval(updSums,700);
+
+/* --- v26: biblioteca de instrucciones (guardar, reutilizar, comprobar) --- */
+{const v0=verify;verify=function(){v0.apply(this,arguments);if(last){const i=window.getInstr?window.getInstr():null;last.instrId=i?i.id:'';last.instrTitle=i?i.title:''}}}
+$('saveInstrBtn').onclick=()=>{const b=$('saveInstrBox');b.hidden=!b.hidden;if(!b.hidden){const i=window.getInstr?window.getInstr():null;$('instrTitle').value=i&&i.title!=='Sin título'?i.title:'';$('instrTitle').focus()}};
+$('instrCancel').onclick=()=>{$('saveInstrBox').hidden=true};
+$('instrOk').onclick=()=>window.libSaveFromResult($('instrTitle').value);
+</script></body></html>
