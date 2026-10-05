@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIproposesCodeVerifies</title>
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+<header>
+  <h1>AIproposesCodeVerifies</h1>
+  <p class="lema">La IA propone. El código verifica. Tú decides.</p>
+  <p id="motor" class="motor">Comprobando el motor…</p>
+</header>
+
+<main>
+<ol class="pasos">
+  <li>
+    <h2>Elige qué proteger</h2>
+    <label for="perfil">Perfil</label>
+    <select id="perfil"></select>
+    <details id="misPerfiles">
+      <summary>Mis perfiles: crear, importar y exportar</summary>
+      <div class="acciones">
+        <button id="pNuevo" type="button">Nuevo</button>
+        <button id="pDuplicar" type="button">Duplicar</button>
+        <button id="pEditar" type="button">Editar</button>
+        <button id="pEliminar" type="button">Eliminar</button>
+      </div>
+      <div class="acciones">
+        <button id="pExportar" type="button">Exportar este</button>
+        <button id="pExportarTodos" type="button">Exportar todos</button>
+        <button id="pCopiar" type="button">Copiar JSON</button>
+        <button id="pImportar" type="button">Importar…</button>
+      </div>
+      <p id="pAviso" class="aviso" role="status" aria-live="polite" hidden></p>
+      <div id="pImportBox" hidden>
+        <label for="pArchivo">Archivo de perfiles (.json)</label>
+        <input id="pArchivo" type="file" accept=".json,application/json">
+        <label for="pPegado">…o pega aquí el JSON</label>
+        <textarea id="pPegado" rows="3" spellcheck="false"></textarea>
+        <div class="acciones"><button id="pLeer" type="button">Leer JSON pegado</button></div>
+        <div id="pPrevia"></div>
+      </div>
+      <div id="pEditor" hidden></div>
+      <p class="nota">Los perfiles se guardan solo en este navegador. Los textos que compruebas no se guardan.</p>
+    </details>
+    <label for="tarea">Qué le vas a pedir a la IA</label>
+    <select id="tarea"></select>
+    <p id="politica" class="nota"></p>
+    <details>
+      <summary>Qué se comprueba con este perfil</summary>
+      <p id="queSeComprueba" class="nota"></p>
+    </details>
+  </li>
+
+  <li>
+    <h2>Prepara la petición</h2>
+    <label for="original">Texto original</label>
+    <textarea id="original" rows="6" placeholder="Pega aquí el texto que quieres transformar"></textarea>
+    <label for="archivo">…o usa un archivo (.txt, .md, .docx, .html o .htm)</label>
+    <input id="archivo" type="file" accept=".txt,.md,.docx,.html,.htm,text/plain,text/markdown,text/html,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+    <p id="archivoEstado" class="aviso" role="status" aria-live="polite" hidden></p>
+    <div class="acciones">
+      <button id="copiar" type="button" class="principal">Copiar instrucciones y texto</button>
+    </div>
+    <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
+    <details>
+      <summary>Ver lo que se copia</summary>
+      <textarea id="mensaje" rows="8" readonly aria-label="Instrucciones y texto que se copian"></textarea>
+    </details>
+    <p class="nota">Pégalo en ChatGPT, Claude, Gemini o la IA que uses, y copia su respuesta.</p>
+  </li>
+
+  <li>
+    <h2>Pega la respuesta de la IA</h2>
+    <label for="respuesta">Respuesta de la IA</label>
+    <textarea id="respuesta" rows="6" placeholder="Pega aquí lo que te ha devuelto la IA"></textarea>
+    <div class="acciones">
+      <button id="comprobar" type="button" class="principal">Comprobar respuesta</button>
+      <button id="borrar" type="button" class="secundario">Empezar de nuevo</button>
+    </div>
+  </li>
+</ol>
+
+<section id="resultado" aria-live="polite" hidden></section>
+</main>
+
+<footer>
+  <p>100 % local: tus textos no salen de este navegador. El programa no comprueba el significado del texto.</p>
+</footer>
+
+<script src="engine.js"></script>
+<script src="perfiles.js"></script>
+<script src="panel-perfiles.js"></script>
+<script src="extractor.js"></script>
+<script src="panel.js"></script>
+</body>
+</html>

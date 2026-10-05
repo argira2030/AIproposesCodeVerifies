@@ -1,0 +1,53 @@
+AIproposesCodeVerifies · versión 1.1.0
+La IA propone. El código verifica. Tú decides.
+
+INSTALAR (Chrome o Edge 116 o superior)
+1. Descomprime este zip. Obtendrás la carpeta «AIproposesCodeVerifies».
+2. Abre chrome://extensions (en Edge: edge://extensions).
+3. Activa «Modo de desarrollador».
+4. Pulsa «Cargar descomprimida» y elige la carpeta «AIproposesCodeVerifies».
+5. Fija la extensión en la barra y pulsa su icono: se abre el panel lateral.
+
+USAR
+1. Elige perfil y qué le vas a pedir a la IA.
+2. Pega el texto original y pulsa «Copiar instrucciones y texto». Pégalo en tu IA.
+3. Copia la respuesta de la IA, pégala en el paso 3 y pulsa «Comprobar respuesta».
+
+MIS PERFILES
+En el paso 1, despliega «Mis perfiles»:
+- Nuevo: crea un perfil con tus datos protegidos, normas de estilo y libertades de la IA.
+- Duplicar: copia cualquier perfil (también los de ejemplo, que no se modifican) y te deja ajustarlo.
+- Editar / Eliminar: solo para tus perfiles.
+- Exportar este / Exportar todos: descarga un archivo .json. «Copiar JSON» es la alternativa si la descarga no funciona.
+- Importar: elige un archivo .json o pega su contenido. Antes de importar ves qué se añade y qué se actualiza.
+Para repartir el mismo perfil a toda una organización: expórtalo e impórtalo en cada navegador. Cada perfil lleva una «huella de reglas»
+de 8 caracteres; si dos personas ven la misma, tienen las mismas reglas. Si alguien edita el archivo a mano, la extensión avisa.
+Al importar, la extensión solo acepta los campos que conoce y descarta lo demás. Límites: 50 perfiles propios, 256 KB por archivo.
+
+CLIC DERECHO
+Selecciona texto en cualquier página, pulsa el botón derecho y elige:
+- «Usar como texto original»: abre el panel y lo carga en el paso 2.
+- «Usar como respuesta de la IA y comprobar»: lo carga en el paso 3 y comprueba al instante (necesita el texto original ya cargado).
+El panel indica cuántos caracteres ha recibido; si el texto es muy largo, confirma que llegó completo.
+Si cambias cualquier campo, el resultado anterior se oculta para que no quede desfasado.
+
+PRIVACIDAD
+- No tiene acceso a ninguna página web ni a la red (sin permisos de host; la política de seguridad bloquea conexiones externas).
+- Permisos: «sidePanel» (mostrar el panel), «contextMenus» (las dos opciones del clic derecho; solo recibe el texto que tú seleccionas y eliges enviar) y «storage» (el borrador de texto, solo en la memoria de sesión del navegador, se borra al cerrarlo; tus perfiles se guardan en este navegador hasta que los elimines. los textos que compruebas no se envían a ningún sitio).
+- Los textos no salen del navegador. No hay servidores.
+
+CITAR
+- DOI: https://doi.org/10.5281/zenodo.23142622
+
+MOTOR
+- Motor v12, SHA-256 fdbcdafee3f0aba17cdc76602380ecd46a8c5dfd4f03fdc227d2e9900768b03e
+- engine.js se genera con «npm run sync» desde engine/engine.js y nunca se edita a mano.
+  Al abrirse, el panel calcula el SHA-256 de engine.js y lo compara con engine.sha256.
+
+LÍMITES DE ESTA VERSIÓN
+- No inserta nada en ChatGPT, Claude o Gemini ni lee sus respuestas por su cuenta: tú seleccionas el texto (clic derecho) o lo pegas.
+- Perfiles: cuatro de ejemplo (Ayuntamiento, Sanidad, Empresa, Reglas básicas) más los que crees. Los perfiles no se sincronizan entre ordenadores: usa exportar e importar.
+- El motor está validado en español: los perfiles propios cambian qué se protege y qué normas se aplican, no el idioma en que el motor reconoce fechas, importes o plazos.
+- Casilla «Mantener el idioma» (opcional, en «¿Qué debe cumplir?»): avisa si la propuesta está en otro idioma que el original. Detección local por palabras frecuentes; con textos muy cortos responde «No concluyente». No se aplica a la tarea «Traducir».
+- El estado «No verificable» no existe en v12. El programa no comprueba el significado del texto.
+- Motor en fase de validación: los umbrales y protocolos están en criterios-congelados-v1.md.
